@@ -44,7 +44,7 @@ Browse the [blocked sites by category](BLOCKED_SITES.md), with complete lists fo
 2. **Search or enter a website.** The start page is just a clock and a search box.
 3. **Browse with fewer distractions.** If a site is blocked, you get a short message instead of the page. There is no “open anyway.”
 
-Search uses Kagi by default. On Android, you can change the search engine in settings, and the Full build offers optional ad blocking. Neither changes the site-blocking rules.
+On Android, search uses Google by default, and Settings lets you switch to DuckDuckGo or Bing. The iOS app also has a search engine setting. Android has a Light (default), Dark, or Follow system theme, a one-tap "Clear all browsing data" in Privacy settings, and the Android Full build offers optional ad blocking. None of these change the site-blocking rules.
 
 **Scope:** Dull blocks sites inside this browser. It does not block other apps or browsers. It is designed to help you spend less time browsing; it does not promise a specific number of hours saved or catch every distracting site.
 

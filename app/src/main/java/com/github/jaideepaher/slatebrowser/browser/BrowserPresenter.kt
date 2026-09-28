@@ -11,6 +11,7 @@ import com.github.jaideepaher.slatebrowser.browser.search.SearchBoxModel
 import com.github.jaideepaher.slatebrowser.browser.tab.DownloadPageInitializer
 import com.github.jaideepaher.slatebrowser.browser.tab.HistoryPageInitializer
 import com.github.jaideepaher.slatebrowser.browser.tab.HomePageInitializer
+import com.github.jaideepaher.slatebrowser.browser.tab.StartPageInitializer
 import com.github.jaideepaher.slatebrowser.browser.tab.NoOpInitializer
 import com.github.jaideepaher.slatebrowser.browser.tab.TabInitializer
 import com.github.jaideepaher.slatebrowser.browser.tab.TabModel
@@ -47,6 +48,7 @@ import com.github.jaideepaher.slatebrowser.utils.isBookmarkUrl
 import com.github.jaideepaher.slatebrowser.utils.isDownloadsUrl
 import com.github.jaideepaher.slatebrowser.utils.isHistoryUrl
 import com.github.jaideepaher.slatebrowser.utils.isSpecialUrl
+import com.github.jaideepaher.slatebrowser.utils.isStartPageUrl
 import androidx.activity.result.ActivityResult
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.core.net.toUri
@@ -62,6 +64,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -83,6 +86,7 @@ class BrowserPresenter @Inject constructor(
     private val historyRecord: HistoryRecord,
     private val bookmarkPageFactory: BookmarkPageFactory,
     private val homePageInitializer: HomePageInitializer,
+    private val startPageInitializer: StartPageInitializer,
     private val historyPageInitializer: HistoryPageInitializer,
     private val downloadPageInitializer: DownloadPageInitializer,
     private val searchBoxModel: SearchBoxModel,
@@ -167,8 +171,12 @@ class BrowserPresenter @Inject constructor(
         }
 
         browserCoroutineScope.launch {
-            // Only react to changes, pages are initially loaded with the current theme.
-            themeProvider.appThemeValues().drop(1).collectLatest {
+            // Only react to changes, pages are initially loaded with the current settings.
+            merge(
+                themeProvider.appThemeValues().drop(1),
+                userPreferencesDataStore.newTabClock.values().drop(1),
+                userPreferencesDataStore.searchChoice.values().drop(1),
+            ).collectLatest {
                 if (currentTab?.url?.isSpecialUrl() == true) {
                     reload()
                 }
@@ -873,6 +881,9 @@ class BrowserPresenter @Inject constructor(
 
                 currentUrl.isHistoryUrl() ->
                     currentTab?.loadFromInitializer(historyPageInitializer)
+
+                currentUrl.isStartPageUrl() ->
+                    currentTab?.loadFromInitializer(startPageInitializer)
 
                 else -> currentTab?.reload()
             }

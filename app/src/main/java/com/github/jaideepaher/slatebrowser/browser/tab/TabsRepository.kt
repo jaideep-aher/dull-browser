@@ -14,6 +14,7 @@ import com.github.jaideepaher.slatebrowser.pool.UnlimitedObjectPool
 import com.github.jaideepaher.slatebrowser.preference.UserPreferencesDataStore
 import com.github.jaideepaher.slatebrowser.search.SearchEngineProvider
 import com.github.jaideepaher.slatebrowser.search.engine.search
+import com.github.jaideepaher.slatebrowser.theme.ThemeProvider
 import com.github.jaideepaher.slatebrowser.useragent.UserAgentProvider
 import com.github.jaideepaher.slatebrowser.utils.isFileUrl
 import android.app.ActivityManager
@@ -38,6 +39,7 @@ class TabsRepository @Inject constructor(
     private val tabFactory: TabFactory,
     private val userPreferencesDataStore: UserPreferencesDataStore,
     private val userAgentProvider: UserAgentProvider,
+    private val themeProvider: ThemeProvider,
     @InitialAction private val initialAction: BrowserContract.Action?,
     private val permissionInitializerFactory: PermissionInitializer.Factory,
     private val coroutineDispatchers: CoroutineDispatchers,
@@ -54,7 +56,7 @@ class TabsRepository @Inject constructor(
             LimitedObjectPool(
                 factory = {
                     val tabSettings =
-                        TabSettings.create(userPreferencesDataStore, userAgentProvider)
+                        TabSettings.create(userPreferencesDataStore, userAgentProvider, themeProvider)
                     webViewFactory.createWebView(tabSettings)
                 },
                 poolSize = activityManager.activeTabLimit()
@@ -63,7 +65,7 @@ class TabsRepository @Inject constructor(
             UnlimitedObjectPool(
                 factory = {
                     val tabSettings =
-                        TabSettings.create(userPreferencesDataStore, userAgentProvider)
+                        TabSettings.create(userPreferencesDataStore, userAgentProvider, themeProvider)
                     webViewFactory.createWebView(tabSettings)
                 }
             )
@@ -115,7 +117,7 @@ class TabsRepository @Inject constructor(
         emitUpdate: Boolean = true,
     ): TabModel = withContext(coroutineDispatchers.main) {
         val id = tabInitializer.tabId()
-        val tabSettings = TabSettings.create(userPreferencesDataStore, userAgentProvider)
+        val tabSettings = TabSettings.create(userPreferencesDataStore, userAgentProvider, themeProvider)
         val tabModel = tabFactory.constructTab(
             id = id,
             tabInitializer = tabInitializer,

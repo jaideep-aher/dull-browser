@@ -2,6 +2,7 @@ package com.github.jaideepaher.slatebrowser.theme
 
 import com.github.jaideepaher.slatebrowser.AppTheme
 import com.github.jaideepaher.slatebrowser.compose.asColorScheme
+import com.github.jaideepaher.slatebrowser.compose.isDark
 import com.github.jaideepaher.slatebrowser.di.IncognitoMode
 import com.github.jaideepaher.slatebrowser.preference.UserPreferencesDataStore
 import android.app.Application
@@ -32,12 +33,11 @@ class DefaultThemeProvider @Inject constructor(
         userPreferencesDataStore.useTheme.get()
     }
 
-    override suspend fun colorScheme(): ColorScheme {
-        val appTheme = appTheme()
+    override suspend fun colorScheme(): ColorScheme = appTheme().asColorScheme(isSystemDark())
 
-        return appTheme.asColorScheme(
-            application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-        )
-    }
+    override suspend fun isDarkTheme(): Boolean = appTheme().isDark(isSystemDark())
+
+    private fun isSystemDark(): Boolean =
+        application.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 
 }

@@ -97,7 +97,6 @@
     <string name="max_tabs">최대 탭 수에 도달했습니다</string>
     <string name="message_text_copied">텍스트가 클립보드로 복사되었습니다</string>
     <string name="message_link_copied">링크가 클립보드로 복사되었습니다</string>
-    <string name="search_engine_custom">임의의 URL</string>
     <string name="message_blocked_local">로컬 파일 불러오기가 차단되었습니다</string>
     <string name="licenses">오픈 소스 라이선스</string>
     <string name="suggestion">다음을 검색</string>
@@ -165,8 +164,6 @@
     <string name="invert_color">색상 반전</string>
     <string name="dark_theme">어두운 테마 사용</string>
     <string name="tabs">탭</string>
-    <string name="search_engine_naver">네이버</string>
-    <string name="powered_by_naver">네이버 제공</string>
     <string name="action_downloads">다운로드</string>
     <string name="supported_browsers_title">지원 브라우저</string>
     <string name="stock_browser">기본 브라우저</string>
@@ -176,7 +173,6 @@
     <string name="problem_download">잘못된 URL입니다, 다운로드할 수 없습니다</string>
     <string name="label_realm">서버 메시지: %s</string>
     <string name="powered_by_duck">DuckDuckGo 제공</string>
-    <string name="powered_by_baidu">Baidu 제공</string>
     <string name="search_suggestions_off">검색 제안 없음</string>
     <string name="http_proxy">HTTP 프록시</string>
     <string name="manual_proxy">수동 프록시</string>

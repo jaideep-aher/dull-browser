@@ -2,17 +2,9 @@
 <resources>
 	<string name="notification_incognito_running_description">Powiadomienie o trybie prywatnym</string>
 	<string name="notification_incognito_running_message">Dotknij, aby otworzyć</string>
-	<string name="search_engine_yandex">Yandex</string>
-	<string name="search_engine_baidu">Baidu</string>
-	<string name="search_engine_duckduckgo_lite">DuckDuckGo Lite</string>
 	<string name="search_engine_duckduckgo">DuckDuckGo</string>
-	<string name="search_engine_startpage_mobile">StartPage Mobile</string>
-	<string name="search_engine_startpage">StartPage</string>
-	<string name="search_engine_yahoo">Yahoo</string>
 	<string name="search_engine_bing">Bing</string>
-	<string name="search_engine_ask">Ask</string>
 	<string name="search_engine_google">Google</string>
-	<string name="search_engine_custom">Własny URL</string>
 	<string name="dialog_delete_all_downloads">Usuń wszystkie pobrane pliki</string>
 	<string name="dialog_delete_download">Usuń pobrany plik</string>
 	<string name="dialog_title_close_browser">Zamknij przeglądarkę</string>
@@ -112,7 +104,6 @@
 	<string name="manual_proxy">Ręczne ustawienia proxy</string>
 	<string name="http_proxy">Konfiguracja serwera proxy</string>
 	<string name="search_suggestions_off">Brak sugestii wyszukiwania</string>
-	<string name="powered_by_baidu">Oparte o Baidu</string>
 	<string name="powered_by_duck">Oparte o DuckDuckGo</string>
 	<string name="powered_by_google">Dostarczane przez Google</string>
 	<string name="search_suggestions">Podpowiedzi wyszukiwania</string>

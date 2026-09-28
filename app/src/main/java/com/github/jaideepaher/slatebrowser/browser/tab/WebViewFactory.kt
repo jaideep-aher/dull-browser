@@ -68,7 +68,7 @@ class WebViewFactory @Inject constructor(
         tag = CompositeTouchListener().also(::setOnTouchListener)
         isFocusableInTouchMode = true
         isFocusable = true
-        setBackgroundColor(Color.WHITE)
+        setBackgroundColor(if (tabSettings.darkTheme) DARK_BACKGROUND else Color.WHITE)
 
         importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_YES
 
@@ -220,6 +220,7 @@ class WebViewFactory @Inject constructor(
         const val HEADER_WAP_PROFILE = "X-Wap-Profile"
         private const val HEADER_DNT = "DNT"
         private const val HEADER_SAVEDATA = "Save-Data"
+        private const val DARK_BACKGROUND = 0xFF202124.toInt()
 
         private val negativeColorArray = floatArrayOf(
             -1.0f, 0f, 0f, 0f, 255f, // red

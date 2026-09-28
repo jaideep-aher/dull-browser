@@ -4,6 +4,7 @@ import com.github.jaideepaher.slatebrowser.AppTheme
 import com.github.jaideepaher.slatebrowser.R
 import com.github.jaideepaher.slatebrowser.browser.tab.settings.TextSize
 import com.github.jaideepaher.slatebrowser.browser.ui.TabConfiguration
+import com.github.jaideepaher.slatebrowser.html.homepage.NewTabClock
 import com.github.jaideepaher.slatebrowser.preference.UserPreferencesDataStore
 import com.github.jaideepaher.slatebrowser.resources.ResourceProvider
 import com.github.jaideepaher.slatebrowser.settings.framework.ClickableOnClick
@@ -21,6 +22,46 @@ class DisplaySettingsScreen @Inject constructor(
     fun createSettingsFrameworkState(): SettingsFrameworkState = SettingsFrameworkState(
         title = resourceProvider.stringResource(R.string.settings_display),
         content = listOf(
+            ClickableState(
+                title = resourceProvider.stringResource(R.string.theme),
+                summary = {
+                    userPreferencesDataStore.useTheme.get().toDisplayString(resourceProvider)
+                },
+                onClick = ClickableOnClick.ItemSelector(
+                    produceState = {
+                        SettingsBottomSheetChooserState(
+                            title = resourceProvider.stringResource(R.string.theme),
+                            values = AppTheme.entries.map { it.toDisplayString(resourceProvider) },
+                            selected = AppTheme.entries.indexOf(userPreferencesDataStore.useTheme.get()),
+                        )
+                    },
+                    onSelected = {
+                        ClickableOnClick.Action {
+                            userPreferencesDataStore.useTheme.set(AppTheme.entries[it])
+                        }
+                    }
+                )
+            ),
+            ClickableState(
+                title = resourceProvider.stringResource(R.string.new_tab_clock),
+                summary = {
+                    userPreferencesDataStore.newTabClock.get().toDisplayString(resourceProvider)
+                },
+                onClick = ClickableOnClick.ItemSelector(
+                    produceState = {
+                        SettingsBottomSheetChooserState(
+                            title = resourceProvider.stringResource(R.string.new_tab_clock),
+                            values = NewTabClock.entries.map { it.toDisplayString(resourceProvider) },
+                            selected = NewTabClock.entries.indexOf(userPreferencesDataStore.newTabClock.get()),
+                        )
+                    },
+                    onSelected = {
+                        ClickableOnClick.Action {
+                            userPreferencesDataStore.newTabClock.set(NewTabClock.entries[it])
+                        }
+                    }
+                )
+            ),
             // TODO: Delete hide status bar option?
             ToggleState(
                 title = resourceProvider.stringResource(R.string.fullScreenOption),
@@ -86,26 +127,6 @@ class DisplaySettingsScreen @Inject constructor(
                 }
             ),
             ClickableState(
-                title = resourceProvider.stringResource(R.string.theme),
-                summary = {
-                    userPreferencesDataStore.useTheme.get().toDisplayString(resourceProvider)
-                },
-                onClick = ClickableOnClick.ItemSelector(
-                    produceState = {
-                        SettingsBottomSheetChooserState(
-                            title = resourceProvider.stringResource(R.string.theme),
-                            values = AppTheme.entries.map { it.toDisplayString(resourceProvider) },
-                            selected = AppTheme.entries.indexOf(userPreferencesDataStore.useTheme.get()),
-                        )
-                    },
-                    onSelected = {
-                        ClickableOnClick.Action {
-                            userPreferencesDataStore.useTheme.set(AppTheme.entries[it])
-                        }
-                    }
-                )
-            ),
-            ClickableState(
                 title = resourceProvider.stringResource(R.string.tab_style_title),
                 summary = {
                     userPreferencesDataStore.tabConfiguration.get()
@@ -158,10 +179,18 @@ class DisplaySettingsScreen @Inject constructor(
 private fun AppTheme.toDisplayString(resourceProvider: ResourceProvider): String =
     resourceProvider.stringResource(
         when (this) {
-            AppTheme.LIGHT -> R.string.light_theme
-            AppTheme.DARK -> R.string.dark_theme
-            AppTheme.BLACK -> R.string.black_theme
-            AppTheme.SYSTEM -> R.string.system_theme
+            AppTheme.LIGHT -> R.string.theme_light
+            AppTheme.DARK -> R.string.theme_dark
+            AppTheme.SYSTEM -> R.string.theme_system
+        }
+    )
+
+private fun NewTabClock.toDisplayString(resourceProvider: ResourceProvider): String =
+    resourceProvider.stringResource(
+        when (this) {
+            NewTabClock.OFF -> R.string.new_tab_clock_off
+            NewTabClock.TWELVE_HOUR -> R.string.new_tab_clock_12
+            NewTabClock.TWENTY_FOUR_HOUR -> R.string.new_tab_clock_24
         }
     )
 

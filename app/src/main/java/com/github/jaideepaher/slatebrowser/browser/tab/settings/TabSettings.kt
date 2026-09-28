@@ -1,6 +1,7 @@
 package com.github.jaideepaher.slatebrowser.browser.tab.settings
 
 import com.github.jaideepaher.slatebrowser.preference.UserPreferencesDataStore
+import com.github.jaideepaher.slatebrowser.theme.ThemeProvider
 import com.github.jaideepaher.slatebrowser.useragent.UserAgentProvider
 
 /**
@@ -23,6 +24,7 @@ import com.github.jaideepaher.slatebrowser.useragent.UserAgentProvider
  * @param overviewModeEnabled see [UserPreferencesDataStore.overviewModeEnabled].
  * @param textSize see [UserPreferencesDataStore.textSize].
  * @param blockThirdPartyCookiesEnabled see [UserPreferencesDataStore.blockThirdPartyCookiesEnabled].
+ * @param darkTheme see [ThemeProvider.isDarkTheme].
  */
 data class TabSettings(
     val openAvailableAppsEnabled: Boolean,
@@ -43,14 +45,17 @@ data class TabSettings(
     val textSize: TextSize,
     val cookiesEnabled: Boolean,
     val blockThirdPartyCookiesEnabled: Boolean,
+    val darkTheme: Boolean,
 ) {
     companion object {
         /**
-         * Construct a [TabSettings] instance from the [UserPreferencesDataStore] and [UserAgentProvider].
+         * Construct a [TabSettings] instance from the [UserPreferencesDataStore], [UserAgentProvider]
+         * and [ThemeProvider].
          */
         suspend fun create(
             userPreferencesDataStore: UserPreferencesDataStore,
             userAgentProvider: UserAgentProvider,
+            themeProvider: ThemeProvider,
         ): TabSettings = TabSettings(
             openAvailableAppsEnabled = userPreferencesDataStore.openAvailableAppsEnabled.get(),
             algorithmicDarkeningEnabled = userPreferencesDataStore.algorithmicDarkeningEnabled.get(),
@@ -70,6 +75,7 @@ data class TabSettings(
             textSize = userPreferencesDataStore.textSize.get(),
             cookiesEnabled = userPreferencesDataStore.cookiesEnabled.get(),
             blockThirdPartyCookiesEnabled = userPreferencesDataStore.blockThirdPartyCookiesEnabled.get(),
+            darkTheme = themeProvider.isDarkTheme(),
         )
     }
 }

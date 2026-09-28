@@ -1,6 +1,7 @@
 package com.github.jaideepaher.slatebrowser.settings.screens
 
 import com.github.jaideepaher.slatebrowser.R
+import com.github.jaideepaher.slatebrowser.adblock.siteblock.SiteBlocker
 import com.github.jaideepaher.slatebrowser.device.BuildInfo
 import com.github.jaideepaher.slatebrowser.device.BuildType
 import com.github.jaideepaher.slatebrowser.resources.ResourceProvider
@@ -8,15 +9,28 @@ import com.github.jaideepaher.slatebrowser.settings.framework.ClickableOnClick
 import com.github.jaideepaher.slatebrowser.settings.framework.ClickableState
 import com.github.jaideepaher.slatebrowser.settings.framework.SettingsFrameworkState
 import com.github.jaideepaher.slatebrowser.settings.navigation.SettingsNavigation
+import kotlinx.coroutines.Deferred
+import java.text.NumberFormat
 import javax.inject.Inject
 
 class RootSettingsScreen @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val buildInfo: BuildInfo,
+    private val siteBlocker: Deferred<@JvmSuppressWildcards SiteBlocker>,
 ) {
     fun createSettingsFrameworkState(): SettingsFrameworkState = SettingsFrameworkState(
         title = resourceProvider.stringResource(R.string.settings),
         content = listOf(
+            ClickableState(
+                title = resourceProvider.stringResource(R.string.site_blocking),
+                summary = {
+                    resourceProvider.stringResource(
+                        R.string.site_blocking_summary,
+                        NumberFormat.getIntegerInstance().format(siteBlocker.await().blockedDomainCount)
+                    )
+                },
+                onClick = ClickableOnClick.Action {},
+            ),
             ClickableState(
                 title = resourceProvider.stringResource(R.string.settings_adblock),
                 onClick = ClickableOnClick.Navigate(SettingsNavigation.ADBLOCK),
