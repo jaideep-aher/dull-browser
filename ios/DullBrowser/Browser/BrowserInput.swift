@@ -1,10 +1,8 @@
 import Foundation
 
-/// Turns what was typed into a page address or a Kagi search.
+/// Turns what was typed into a page address or a search with the selected engine.
 enum BrowserInput {
-    static let searchPrefix = "https://kagi.com/search?q="
-
-    static func url(for input: String) -> URL? {
+    static func url(for input: String, searchEngine: SearchEngine = .current) -> URL? {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
         let lower = text.lowercased()
@@ -14,14 +12,14 @@ enum BrowserInput {
         } else if !text.contains(" "), looksLikeHost(text), let url = URL(string: "https://" + text), url.host != nil {
             return url
         }
-        return search(text)
+        return search(text, engine: searchEngine)
     }
 
-    static func search(_ query: String) -> URL? {
+    static func search(_ query: String, engine: SearchEngine = .current) -> URL? {
         var allowed = CharacterSet.urlQueryAllowed
         allowed.remove(charactersIn: "&+=?#")
         guard let encoded = query.addingPercentEncoding(withAllowedCharacters: allowed) else { return nil }
-        return URL(string: searchPrefix + encoded)
+        return URL(string: engine.searchPrefix + encoded)
     }
 
     private static func looksLikeHost(_ text: String) -> Bool {

@@ -3,6 +3,9 @@ import UIKit
 
 struct BrowserBar: View {
     @ObservedObject var model: BrowserModel
+    let tabCount: Int
+    let showTabs: () -> Void
+    let showSettings: () -> Void
 
     @State private var text = ""
     @FocusState private var editing: Bool
@@ -21,28 +24,42 @@ struct BrowserBar: View {
                 barButton("chevron.left", label: "Back", enabled: model.canStepBack) { model.goBack() }
                 barButton("chevron.right", label: "Forward", enabled: model.canGoForward) { model.goForward() }
 
-                TextField("Search or address", text: $text)
-                    .focused($editing)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .keyboardType(.webSearch)
-                    .submitLabel(.go)
-                    .multilineTextAlignment(editing ? .leading : .center)
-                    .onSubmit {
-                        model.open(text)
-                        editing = false
-                    }
-                    .font(.system(size: 15))
-                    .foregroundStyle(Theme.ink)
-                    .padding(.horizontal, 12)
-                    .frame(height: 38)
-                    .background(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink.opacity(0.25), lineWidth: 1))
-                    .accessibilityIdentifier("addressField")
+                if !model.showingNewTab {
+                    TextField("Search or address", text: $text)
+                        .focused($editing)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.webSearch)
+                        .submitLabel(.go)
+                        .multilineTextAlignment(editing ? .leading : .center)
+                        .onSubmit {
+                            model.open(text)
+                            editing = false
+                        }
+                        .font(.system(size: 15))
+                        .foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 12)
+                        .frame(height: 38)
+                        .background(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink.opacity(0.25), lineWidth: 1))
+                        .accessibilityIdentifier("addressField")
 
-                barButton(model.isLoading ? "xmark" : "arrow.clockwise",
-                          label: model.isLoading ? "Stop" : "Reload",
-                          enabled: model.blockedHost == nil) { model.reloadOrStop() }
-                barButton("plus", label: "New tab", enabled: true) { model.newTab() }
+                    barButton(model.isLoading ? "xmark" : "arrow.clockwise",
+                              label: model.isLoading ? "Stop" : "Reload",
+                              enabled: model.blockedHost == nil) { model.reloadOrStop() }
+                } else {
+                    Spacer()
+                }
+                Button(action: showTabs) {
+                    Text("\(tabCount)")
+                        .font(.system(size: 13, weight: .semibold))
+                        .frame(minWidth: 23, minHeight: 25)
+                        .overlay(RoundedRectangle(cornerRadius: 5).stroke(lineWidth: 1.5))
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel("Tabs")
+                .accessibilityValue("\(tabCount)")
+                .accessibilityIdentifier("tabsButton")
+                barButton("gearshape", label: "Settings", enabled: true, action: showSettings)
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 6)
@@ -66,7 +83,7 @@ struct BrowserBar: View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 17, weight: .regular))
-                .frame(width: 40, height: 40)
+                .frame(width: 44, height: 44)
         }
         .foregroundStyle(Theme.ink)
         .disabled(!enabled)

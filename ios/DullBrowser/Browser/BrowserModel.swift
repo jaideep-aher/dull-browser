@@ -7,7 +7,13 @@ import os
 /// One web view and the gate in front of it. Every page load, redirect and response passes
 /// through the navigation delegate below before anything is shown.
 @MainActor
-final class BrowserModel: NSObject, ObservableObject {
+final class BrowserModel: NSObject, ObservableObject, Identifiable {
+    let id: UUID
+    var openInNewTab: ((URL) -> Void)?
+    @Published private(set) var title = ""
+    private var restoredURL: URL?
+    private var requestedURL: URL?
+    private var committedURL: URL?
     @Published private(set) var webView: WKWebView
     @Published private(set) var showingNewTab = true
     @Published private(set) var blockedHost: String?
@@ -24,7 +30,9 @@ final class BrowserModel: NSObject, ObservableObject {
     /// Bumps on each navigation so a late DNS answer for an old one is dropped.
     private var generation = 0
 
-    override init() {
+    init(id: UUID = UUID(), restoredURL: URL? = nil) {
+        self.id = id
+        self.restoredURL = restoredURL
         webView = Self.makeWebView(ruleLists: [])
         super.init()
         attach(webView)
@@ -33,6 +41,39 @@ final class BrowserModel: NSObject, ObservableObject {
             ruleLists = lists
             lists.forEach(webView.configuration.userContentController.add)
         }
+    }
+
+    var savedAddress: String? {
+        if let restoredURL { return restoredURL.absoluteString }
+        if showingNewTab { return nil }
+        if let blockedHost { return "https://\(blockedHost)" }
+        return (loadError != nil ? requestedURL : (url ?? requestedURL))?.absoluteString
+    }
+
+    var tabTitle: String {
+        if let blockedHost { return blockedHost }
+        if let restoredURL { return restoredURL.host ?? "Page" }
+        if showingNewTab { return "New tab" }
+        return title.isEmpty ? (url?.host ?? "Loading…") : title
+    }
+
+    func restoreIfNeeded() {
+        guard let target = restoredURL else { return }
+        restoredURL = nil
+        load(target)
+    }
+
+    func deactivate() {
+        webView.pauseAllMediaPlayback(completionHandler: nil)
+    }
+
+    func close() {
+        generation += 1
+        webView.stopLoading()
+        webView.pauseAllMediaPlayback(completionHandler: nil)
+        webView.navigationDelegate = nil
+        webView.uiDelegate = nil
+        observers.removeAll()
     }
 
     var addressForDisplay: String {
@@ -62,6 +103,10 @@ final class BrowserModel: NSObject, ObservableObject {
     }
 
     func load(_ url: URL) {
+        generation += 1
+        restoredURL = nil
+        requestedURL = url
+        self.url = url
         blockedHost = nil
         loadError = nil
         showingNewTab = false
@@ -72,11 +117,16 @@ final class BrowserModel: NSObject, ObservableObject {
         if blockedHost != nil || loadError != nil {
             blockedHost = nil
             loadError = nil
-            if webView.url == nil { showingNewTab = true }
+            if committedURL == nil {
+                newTab()
+            } else {
+                requestedURL = committedURL
+                url = committedURL
+            }
         } else if webView.canGoBack {
             webView.goBack()
         } else {
-            showingNewTab = true
+            newTab()
         }
     }
 
@@ -90,12 +140,21 @@ final class BrowserModel: NSObject, ObservableObject {
         if webView.isLoading {
             webView.stopLoading()
         } else if blockedHost == nil {
-            loadError = nil
-            webView.reload()
+            if loadError != nil, let requestedURL {
+                load(requestedURL)
+            } else {
+                webView.reload()
+            }
         }
     }
 
     func newTab() {
+        generation += 1
+        restoredURL = nil
+        requestedURL = nil
+        committedURL = nil
+        title = ""
+        webView.pauseAllMediaPlayback(completionHandler: nil)
         webView.stopLoading()
         webView.navigationDelegate = nil
         webView.uiDelegate = nil
@@ -125,6 +184,7 @@ final class BrowserModel: NSObject, ObservableObject {
         view.navigationDelegate = self
         view.uiDelegate = self
         url = view.url
+        view.publisher(for: \.title).sink { [weak self] in self?.title = $0 ?? "" }.store(in: &observers)
         view.publisher(for: \.url).sink { [weak self] in self?.url = $0 }.store(in: &observers)
         view.publisher(for: \.isLoading).sink { [weak self] in self?.isLoading = $0 }.store(in: &observers)
         view.publisher(for: \.estimatedProgress).sink { [weak self] in self?.progress = $0 }.store(in: &observers)
@@ -136,6 +196,7 @@ final class BrowserModel: NSObject, ObservableObject {
     private func showBlocked(_ host: String, in view: WKWebView, stage: String, committed: Bool = false) {
         guard view === webView else { return }
         Logger.blocking.info("Closed \(host, privacy: .public) at \(stage, privacy: .public)")
+        view.pauseAllMediaPlayback(completionHandler: nil)
         blockedHost = host.lowercased()
         loadError = nil
         showingNewTab = false
@@ -152,7 +213,7 @@ final class BrowserModel: NSObject, ObservableObject {
 
 extension BrowserModel: WKNavigationDelegate {
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction) async -> WKNavigationActionPolicy {
-        guard let url = action.request.url else { return .cancel }
+        guard webView === self.webView, let url = action.request.url else { return .cancel }
         let isMainFrame = action.targetFrame?.isMainFrame ?? true
 
         if isMainFrame {
@@ -166,12 +227,14 @@ extension BrowserModel: WKNavigationDelegate {
 
         switch url.scheme?.lowercased() ?? "" {
         case "http", "https":
+            if isMainFrame { requestedURL = url }
             if isMainFrame, let host = url.host {
                 // Start the lookup while the request goes out; the response waits on it.
                 Task.detached(priority: .userInitiated) { _ = await FamilyDNS.shared.isFiltered(host) }
             }
             return .allow
         case "about", "data", "blob":
+            if isMainFrame { requestedURL = url }
             return .allow
         case "mailto", "tel", "sms", "facetime":
             if action.navigationType == .linkActivated { await UIApplication.shared.open(url) }
@@ -190,6 +253,7 @@ extension BrowserModel: WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor response: WKNavigationResponse) async -> WKNavigationResponsePolicy {
+        guard webView === self.webView else { return .cancel }
         guard let url = response.response.url else { return .allow }
         guard response.isForMainFrame else {
             return blocker.isListed(host: url.host) ? .cancel : .allow
@@ -205,8 +269,9 @@ extension BrowserModel: WKNavigationDelegate {
         let started = generation
         // Suspends here; the lookup itself runs off the main thread.
         let filtered = await FamilyDNS.shared.isFiltered(host)
+        guard webView === self.webView, started == generation else { return .cancel }
         guard filtered else { return .allow }
-        if started == generation { showBlocked(host, in: webView, stage: "family dns") }
+        showBlocked(host, in: webView, stage: "family dns")
         return .cancel
     }
 
@@ -217,12 +282,27 @@ extension BrowserModel: WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        guard webView === self.webView else { return }
         generation += 1
     }
 
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-        guard let url = webView.url, let host = blocker.listedHost(for: url) else { return }
-        showBlocked(host, in: webView, stage: "commit", committed: true)
+        guard webView === self.webView, let url = webView.url else { return }
+        // WebKit can silently substitute about:blank for a URL using a restricted port,
+        // without sending didFail. Preserve the requested address and show a useful error.
+        if url.absoluteString == "about:blank", let target = requestedURL,
+           target.scheme == "http" || target.scheme == "https" {
+            self.url = target
+            loadError = "This address could not be opened. Check the address and try again."
+            return
+        }
+        if let host = blocker.listedHost(for: url) {
+            showBlocked(host, in: webView, stage: "commit", committed: true)
+        } else {
+            committedURL = url
+            requestedURL = url
+            loadError = nil
+        }
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
@@ -240,22 +320,26 @@ extension BrowserModel: WKNavigationDelegate {
     private func report(_ error: Error, in view: WKWebView) {
         let error = error as NSError
         let cancelled = error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled
-        // 101 and 102 are WebKit's codes for a load the policy delegate stopped.
-        let stoppedByPolicy = error.domain == "WebKitErrorDomain" && (error.code == 101 || error.code == 102)
+        // 102 is a frame load interrupted by policy. 101 means an unsupported URL
+        // and must produce a visible error rather than leaving a blank page.
+        let stoppedByPolicy = error.domain == "WebKitErrorDomain" && error.code == 102
         guard view === webView, !cancelled, !stoppedByPolicy, blockedHost == nil else { return }
         loadError = error.localizedDescription
     }
 }
 
 extension BrowserModel: WKUIDelegate {
-    /// Links that ask for a new window open in this one, through the same gate.
+    /// New-window links get their own tab, through the same blocking gate.
     func webView(
         _ webView: WKWebView,
         createWebViewWith configuration: WKWebViewConfiguration,
         for action: WKNavigationAction,
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
-        if action.targetFrame == nil { webView.load(action.request) }
+        if action.targetFrame == nil, let target = action.request.url {
+            if let openInNewTab { openInNewTab(target) }
+            else { load(target) }
+        }
         return nil
     }
 }

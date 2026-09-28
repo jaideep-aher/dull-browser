@@ -7,7 +7,7 @@ final class BrowserUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["-introSeen", "YES"]
+        app.launchArguments = ["-UITesting", "YES", "-introSeen", "YES", "-UITestResetSession", "YES"]
     }
 
     private func screenshot(_ name: String) {
@@ -37,7 +37,7 @@ final class BrowserUITests: XCTestCase {
     }
 
     func testFirstRunShowsThreeLines() {
-        app.launchArguments = ["-introSeen", "NO"]
+        app.launchArguments = ["-UITesting", "YES", "-introSeen", "NO", "-UITestResetSession", "YES"]
         app.launch()
         XCTAssertTrue(app.staticTexts["The list is in the app."].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["There is no switch."].exists)
@@ -47,22 +47,21 @@ final class BrowserUITests: XCTestCase {
         XCTAssertTrue(app.textFields["searchField"].waitForExistence(timeout: 5))
     }
 
-    func testNewTabIsClockAndSearchOnly() {
+    func testNewTabHasClockSearchTabsAndSettings() {
         app.launch()
         XCTAssertTrue(app.textFields["searchField"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["clock"].exists)
         XCTAssertEqual(app.textFields.count, 1)
-        XCTAssertEqual(app.staticTexts.count, 1)
-        XCTAssertEqual(app.buttons.count, 0)
+        XCTAssertTrue(app.buttons["tabsButton"].exists)
+        XCTAssertTrue(app.buttons["Settings"].exists)
         XCTAssertEqual(app.links.count, 0)
-        XCTAssertEqual(app.images.count, 0)
         screenshot("new-tab")
     }
 
     func testExampleDotComLoads() {
         app.launch()
         open("example.com")
-        XCTAssertTrue(app.webViews.staticTexts["Example Domain"].waitForExistence(timeout: 30))
+        XCTAssertTrue(app.webViews.descendants(matching: .any)["Example Domain"].waitForExistence(timeout: 30))
         XCTAssertFalse(app.staticTexts["blockedMessage"].exists)
         screenshot("example-com")
     }

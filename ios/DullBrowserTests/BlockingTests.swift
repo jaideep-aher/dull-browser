@@ -88,10 +88,10 @@ final class SiteBlockerTests: XCTestCase {
 
 final class BrowserInputTests: XCTestCase {
     func testAddressesAndSearches() {
-        XCTAssertEqual(BrowserInput.url(for: "example.com")?.absoluteString, "https://example.com")
-        XCTAssertEqual(BrowserInput.url(for: "http://example.com/a")?.absoluteString, "http://example.com/a")
-        XCTAssertEqual(BrowserInput.url(for: "bbc")?.absoluteString, "https://kagi.com/search?q=bbc")
-        XCTAssertEqual(BrowserInput.url(for: "bbc news & more")?.absoluteString,
+        XCTAssertEqual(BrowserInput.url(for: "example.com", searchEngine: .kagi)?.absoluteString, "https://example.com")
+        XCTAssertEqual(BrowserInput.url(for: "http://example.com/a", searchEngine: .kagi)?.absoluteString, "http://example.com/a")
+        XCTAssertEqual(BrowserInput.url(for: "bbc", searchEngine: .kagi)?.absoluteString, "https://kagi.com/search?q=bbc")
+        XCTAssertEqual(BrowserInput.url(for: "bbc news & more", searchEngine: .kagi)?.absoluteString,
                        "https://kagi.com/search?q=bbc%20news%20%26%20more")
     }
 }
