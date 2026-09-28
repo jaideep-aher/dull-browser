@@ -34,11 +34,6 @@ class AboutSettingsScreen @Inject constructor(
                 summary = { resourceProvider.stringResource(R.string.apache) },
                 onClick = ClickableOnClick.WebLink("http://www.apache.org/licenses/LICENSE-2.0")
             ),
-            ClickableState(
-                title = resourceProvider.stringResource(R.string.hphosts_ad_server_list),
-                summary = { resourceProvider.stringResource(R.string.freeware) },
-                onClick = ClickableOnClick.WebLink("http://hosts-file.net/")
-            ),
         )
     )
 }

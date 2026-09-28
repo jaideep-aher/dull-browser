@@ -24,4 +24,9 @@ interface ThemeProvider {
      */
     suspend fun colorScheme(): ColorScheme
 
+    /**
+     * True if the current app theme resolves to a dark palette.
+     */
+    suspend fun isDarkTheme(): Boolean
+
 }

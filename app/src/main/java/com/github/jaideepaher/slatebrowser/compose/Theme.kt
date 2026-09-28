@@ -86,48 +86,9 @@ private val darkScheme = darkColorScheme(
     surfaceContainerHighest = surfaceContainerHighestDark,
 )
 
-private val highContrastDarkScheme = darkColorScheme(
-    primary = primaryDarkHighContrast,
-    onPrimary = onPrimaryDarkHighContrast,
-    primaryContainer = primaryContainerDarkHighContrast,
-    onPrimaryContainer = onPrimaryContainerDarkHighContrast,
-    secondary = secondaryDarkHighContrast,
-    onSecondary = onSecondaryDarkHighContrast,
-    secondaryContainer = secondaryContainerDarkHighContrast,
-    onSecondaryContainer = onSecondaryContainerDarkHighContrast,
-    tertiary = tertiaryDarkHighContrast,
-    onTertiary = onTertiaryDarkHighContrast,
-    tertiaryContainer = tertiaryContainerDarkHighContrast,
-    onTertiaryContainer = onTertiaryContainerDarkHighContrast,
-    error = errorDarkHighContrast,
-    onError = onErrorDarkHighContrast,
-    errorContainer = errorContainerDarkHighContrast,
-    onErrorContainer = onErrorContainerDarkHighContrast,
-    background = backgroundDarkHighContrast,
-    onBackground = onBackgroundDarkHighContrast,
-    surface = surfaceDarkHighContrast,
-    onSurface = onSurfaceDarkHighContrast,
-    surfaceVariant = surfaceVariantDarkHighContrast,
-    onSurfaceVariant = onSurfaceVariantDarkHighContrast,
-    outline = outlineDarkHighContrast,
-    outlineVariant = outlineVariantDarkHighContrast,
-    scrim = scrimDarkHighContrast,
-    inverseSurface = inverseSurfaceDarkHighContrast,
-    inverseOnSurface = inverseOnSurfaceDarkHighContrast,
-    inversePrimary = inversePrimaryDarkHighContrast,
-    surfaceDim = surfaceDimDarkHighContrast,
-    surfaceBright = surfaceBrightDarkHighContrast,
-    surfaceContainerLowest = surfaceContainerLowestDarkHighContrast,
-    surfaceContainerLow = surfaceContainerLowDarkHighContrast,
-    surfaceContainer = surfaceContainerDarkHighContrast,
-    surfaceContainerHigh = surfaceContainerHighDarkHighContrast,
-    surfaceContainerHighest = surfaceContainerHighestDarkHighContrast,
-)
-
 fun AppTheme.asColorScheme(systemDarkTheme: Boolean): ColorScheme = when (this) {
     AppTheme.LIGHT -> lightScheme
     AppTheme.DARK -> darkScheme
-    AppTheme.BLACK -> highContrastDarkScheme
     AppTheme.SYSTEM -> if (systemDarkTheme) {
         darkScheme
     } else {
@@ -138,7 +99,6 @@ fun AppTheme.asColorScheme(systemDarkTheme: Boolean): ColorScheme = when (this) 
 fun AppTheme.isDark(systemDarkTheme: Boolean): Boolean = when (this) {
     AppTheme.LIGHT -> false
     AppTheme.DARK -> true
-    AppTheme.BLACK -> true
     AppTheme.SYSTEM -> systemDarkTheme
 }
 

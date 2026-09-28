@@ -10,6 +10,7 @@ import com.github.jaideepaher.slatebrowser.browser.ui.TabConfiguration
 import com.github.jaideepaher.slatebrowser.constant.DEFAULT_ENCODING
 import com.github.jaideepaher.slatebrowser.constant.SCHEME_HOMEPAGE
 import com.github.jaideepaher.slatebrowser.device.ScreenSize
+import com.github.jaideepaher.slatebrowser.html.homepage.NewTabClock
 import com.github.jaideepaher.slatebrowser.preference.datastore.EnumPreferenceStore
 import com.github.jaideepaher.slatebrowser.preference.datastore.NonNullPreferenceStore
 import com.github.jaideepaher.slatebrowser.preference.datastore.NullablePreferenceStore
@@ -20,9 +21,9 @@ import com.github.jaideepaher.slatebrowser.preference.datastore.migrateString
 import com.github.jaideepaher.slatebrowser.search.SearchEngineChoice
 import com.github.jaideepaher.slatebrowser.search.SearchEngineProvider
 import com.github.jaideepaher.slatebrowser.search.Suggestions
-import com.github.jaideepaher.slatebrowser.search.engine.GoogleSearch
 import com.github.jaideepaher.slatebrowser.useragent.UserAgentChoice
 import android.app.Application
+import androidx.datastore.core.DataMigration
 import androidx.datastore.migrations.SharedPreferencesMigration
 import androidx.datastore.migrations.SharedPreferencesView
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
@@ -61,7 +62,6 @@ class UserPreferencesDataStore @Inject constructor(
                     migrateBoolean(popupsEnabled)
                     migrateBoolean(restoreLostTabsEnabled)
                     migrateEnum(searchChoice)
-                    migrateString(searchUrl)
                     migrateBoolean(textReflowEnabled)
                     migrateEnum(textSize)
                     migrateBoolean(useWideViewPortEnabled)
@@ -86,7 +86,8 @@ class UserPreferencesDataStore @Inject constructor(
                     migrateNullableString(hostsLocalFile)
                     migrateNullableString(hostsRemoteFile)
                 }.first
-            }
+            },
+            RemovedChoicesMigration,
         ),
         produceFile = {
             application.preferencesDataStoreFile(FILE_NAME)
@@ -243,16 +244,7 @@ class UserPreferencesDataStore @Inject constructor(
     val searchChoice: EnumPreferenceStore<SearchEngineChoice> = EnumPreferenceStore(
         key = intPreferencesKey(SEARCH),
         dataStore = dataStore,
-        defaultValue = SearchEngineChoice.KAGI
-    )
-
-    /**
-     * The custom URL which should be used for making searches.
-     */
-    val searchUrl: NonNullPreferenceStore<String> = NonNullPreferenceStore(
-        key = stringPreferencesKey(SEARCH_URL),
-        dataStore = dataStore,
-        defaultValue = GoogleSearch().queryUrl
+        defaultValue = SearchEngineChoice.GOOGLE
     )
 
     /**
@@ -376,7 +368,7 @@ class UserPreferencesDataStore @Inject constructor(
     val useTheme: EnumPreferenceStore<AppTheme> = EnumPreferenceStore(
         key = intPreferencesKey(THEME),
         dataStore = dataStore,
-        defaultValue = AppTheme.SYSTEM
+        defaultValue = AppTheme.LIGHT
     )
 
     /**
@@ -466,7 +458,7 @@ class UserPreferencesDataStore @Inject constructor(
     val searchSuggestionChoice: EnumPreferenceStore<Suggestions> = EnumPreferenceStore(
         key = intPreferencesKey(SEARCH_SUGGESTIONS),
         dataStore = dataStore,
-        defaultValue = Suggestions.NONE
+        defaultValue = Suggestions.GOOGLE
     )
 
     /**
@@ -504,9 +496,54 @@ class UserPreferencesDataStore @Inject constructor(
         defaultValue = true
     )
 
+    /**
+     * How the clock on the new tab page is shown, if at all.
+     */
+    val newTabClock: EnumPreferenceStore<NewTabClock> = EnumPreferenceStore(
+        key = intPreferencesKey(NEW_TAB_CLOCK),
+        dataStore = dataStore,
+        defaultValue = NewTabClock.TWELVE_HOUR
+    )
+
     companion object {
         private const val FILE_NAME = "settings"
     }
+}
+
+/**
+ * Moves persisted choices that no longer exist to the closest remaining option: removed search
+ * engines and suggestion providers fall back to Google, the removed black theme becomes dark.
+ */
+internal object RemovedChoicesMigration : DataMigration<Preferences> {
+
+    private const val REMOVED_BLACK_THEME = 2
+
+    private val searchKey = intPreferencesKey(SEARCH)
+    private val suggestionsKey = intPreferencesKey(SEARCH_SUGGESTIONS)
+    private val themeKey = intPreferencesKey(THEME)
+    private val searchUrlKey = stringPreferencesKey(SEARCH_URL)
+
+    override suspend fun shouldMigrate(currentData: Preferences): Boolean =
+        remap(currentData) != currentData
+
+    override suspend fun migrate(currentData: Preferences): Preferences = remap(currentData)
+
+    override suspend fun cleanUp() = Unit
+
+    fun remap(preferences: Preferences): Preferences = preferences.toMutablePreferences().apply {
+        val search = this[searchKey]
+        if (search != null && SearchEngineChoice.entries.none { it.value == search }) {
+            this[searchKey] = SearchEngineChoice.GOOGLE.value
+        }
+        val suggestions = this[suggestionsKey]
+        if (suggestions != null && Suggestions.entries.none { it.value == suggestions }) {
+            this[suggestionsKey] = Suggestions.GOOGLE.value
+        }
+        if (this[themeKey] == REMOVED_BLACK_THEME) {
+            this[themeKey] = AppTheme.DARK.value
+        }
+        remove(searchUrlKey)
+    }.toPreferences()
 }
 
 private const val ALGORITHMIC_DARKENING = "algorithmicDarkening"
@@ -554,3 +591,4 @@ private const val HOSTS_LOCAL_FILE = "hostsLocalFile"
 private const val HOSTS_REMOTE_FILE = "hostsRemoteFile"
 private const val OPEN_AVAILABLE_APPS = "openAvailableApps"
 private const val LIMIT_ACTIVE_TABS = "limitActiveTabs"
+private const val NEW_TAB_CLOCK = "newTabClock"

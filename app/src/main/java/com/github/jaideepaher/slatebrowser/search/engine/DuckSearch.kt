@@ -9,6 +9,6 @@ import com.github.jaideepaher.slatebrowser.R
  */
 class DuckSearch : BaseSearchEngine(
     "file:///android_asset/duckduckgo.png",
-    "https://duckduckgo.com/?t=lightning&q=",
+    "https://duckduckgo.com/?q=",
     R.string.search_engine_duckduckgo
 )

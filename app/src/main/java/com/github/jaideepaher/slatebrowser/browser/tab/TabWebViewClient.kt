@@ -17,6 +17,7 @@ import com.github.jaideepaher.slatebrowser.js.TextReflow
 import com.github.jaideepaher.slatebrowser.log.Logger
 import com.github.jaideepaher.slatebrowser.ssl.SslState
 import com.github.jaideepaher.slatebrowser.ssl.SslWarningPreferences
+import com.github.jaideepaher.slatebrowser.theme.ThemeProvider
 import com.github.jaideepaher.slatebrowser.utils.ThreadSafeFileProvider
 import com.github.jaideepaher.slatebrowser.utils.isSpecialUrl
 import android.annotation.SuppressLint
@@ -58,6 +59,7 @@ class TabWebViewClient @AssistedInject constructor(
     @Assisted private val headers: Map<String, String>,
     private val sslWarningPreferences: SslWarningPreferences,
     private val textReflow: TextReflow,
+    private val themeProvider: ThemeProvider,
     private val logger: Logger,
     @FaviconCacheDir private val faviconCacheDirThreadSafeFileProvider: ThreadSafeFileProvider,
     @GeneratedHtmlDir private val generatedHtmlDirThreadSafeFileProvider: ThreadSafeFileProvider,
@@ -154,6 +156,17 @@ class TabWebViewClient @AssistedInject constructor(
     private var zoomScale: Float = 0.0F
     private var urlWithSslError: String? = null
 
+    @Volatile
+    private var darkTheme: Boolean = false
+
+    init {
+        tabCoroutineScope.launch {
+            themeProvider.appThemeValues().collect {
+                darkTheme = themeProvider.isDarkTheme()
+            }
+        }
+    }
+
     private fun shouldBlockRequest(pageUrl: String, requestUri: Uri) =
         !allowListModel.isUrlAllowedAds(pageUrl) &&
             runBlocking { adBlocker.await().isAd(requestUri) }
@@ -224,7 +237,7 @@ class TabWebViewClient @AssistedInject constructor(
         val pageUrl = "https://$key/"
         view.loadDataWithBaseURL(
             pageUrl,
-            BlockedPage.document(host),
+            BlockedPage.document(host, darkTheme),
             "text/html",
             "utf-8",
             pageUrl
@@ -453,7 +466,7 @@ class TabWebViewClient @AssistedInject constructor(
             // Before the ad blocker. This list has no preference and no per-site exception.
             return if (request.isForMainFrame) {
                 logger.log(TAG, "Blocked page load for $blockedHost")
-                BlockedPage.forHost(blockedHost)
+                BlockedPage.forHost(blockedHost, darkTheme)
             } else {
                 BlockedPage.emptyResource()
             }

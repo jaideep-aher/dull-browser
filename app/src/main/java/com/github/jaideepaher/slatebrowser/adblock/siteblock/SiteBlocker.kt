@@ -37,6 +37,12 @@ class SiteBlocker @Inject constructor(
 
     private val matcher = DomainMatcher(blockedDomains)
 
+    /**
+     * How many domains the packaged list closes, subdomains not counted separately.
+     */
+    val blockedDomainCount: Int
+        get() = blockedDomains.size
+
     init {
         logger.log(TAG, "Loaded ${blockedDomains.size} blocked domains")
     }

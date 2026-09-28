@@ -6,9 +6,12 @@
     <title>${TITLE}</title>
     <style>
         :root {
+            color-scheme: {SCHEME};
             --body-bg: {COLOR};
             --box-bg: {COLOR};
             --box-txt: {COLOR};
+            --muted: {COLOR};
+            --border: {COLOR};
         }
 
         html, body {
@@ -19,34 +22,50 @@
         }
 
         main {
-            max-width: 28rem;
+            max-width: 36rem;
             margin: 0 auto;
-            padding: 18vh 28px 48px;
+            padding: 22vh 20px 48px;
             box-sizing: border-box;
+            text-align: center;
         }
 
         #clock {
             font-size: 56px;
-            font-weight: 400;
-            letter-spacing: -0.03em;
-            margin: 0 0 36px;
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            margin: 0 0 32px;
+        }
+
+        #clock[hidden] {
+            display: none;
         }
 
         form {
-            margin: 0 0 40px;
+            margin: 0;
         }
 
         #search_input {
             width: 100%;
-            border: none;
-            border-bottom: 1px solid var(--box-txt);
-            background: transparent;
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: var(--body-bg);
             color: var(--box-txt);
             font: inherit;
-            font-size: 18px;
-            padding: 8px 0;
+            font-size: 16px;
+            height: 48px;
+            padding: 0 20px;
             outline: none;
-            border-radius: 0;
+            -webkit-appearance: none;
+        }
+
+        #search_input:focus {
+            background: var(--box-bg);
+            border-color: var(--box-bg);
+        }
+
+        #search_input::placeholder {
+            color: var(--muted);
         }
     </style>
 </head>
@@ -58,14 +77,23 @@
     </form>
 </main>
 <script>
+    var clockMode = "${CLOCK}";
+    var clock = document.getElementById("clock");
+    document.getElementById("search_input").placeholder = "${SEARCH_HINT}";
+
     function tick() {
         var d = new Date();
         var h = d.getHours();
         var m = ("0" + d.getMinutes()).slice(-2);
-        document.getElementById("clock").textContent = ((h % 12) || 12) + ":" + m;
+        clock.textContent = (clockMode === "24" ? ("0" + h).slice(-2) : ((h % 12) || 12)) + ":" + m;
     }
-    tick();
-    setInterval(tick, 10000);
+
+    if (clockMode === "off") {
+        clock.hidden = true;
+    } else {
+        tick();
+        setInterval(tick, 10000);
+    }
 
     function search() {
         var value = document.getElementById("search_input").value;

@@ -14,6 +14,7 @@ import com.github.jaideepaher.slatebrowser.html.jsoup.parse
 import com.github.jaideepaher.slatebrowser.html.jsoup.style
 import com.github.jaideepaher.slatebrowser.html.jsoup.tag
 import com.github.jaideepaher.slatebrowser.html.jsoup.title
+import com.github.jaideepaher.slatebrowser.preference.UserPreferencesDataStore
 import com.github.jaideepaher.slatebrowser.search.SearchEngineProvider
 import com.github.jaideepaher.slatebrowser.theme.ThemeProvider
 import com.github.jaideepaher.slatebrowser.utils.ThreadSafeFileProvider
@@ -27,10 +28,11 @@ import javax.inject.Inject
  * A factory for the home page.
  */
 class HomePageFactory @Inject constructor(
-    application: Application,
+    private val application: Application,
     private val searchEngineProvider: SearchEngineProvider,
     private val homePageReader: HomePageReader,
     private val themeProvider: ThemeProvider,
+    private val userPreferencesDataStore: UserPreferencesDataStore,
     private val coroutineDispatchers: CoroutineDispatchers,
     @GeneratedHtmlDir private val generatedHtmlDir: ThreadSafeFileProvider,
 ) : HtmlPageFactory {
@@ -39,11 +41,21 @@ class HomePageFactory @Inject constructor(
 
     override suspend fun buildPage(): String = withContext(coroutineDispatchers.io) {
         val colorScheme = themeProvider.colorScheme()
-        val (_, queryUrl, _) = searchEngineProvider.provideSearchEngine()
+        val (_, queryUrl, titleRes) = searchEngineProvider.provideSearchEngine()
+        val searchHint = application.getString(R.string.new_tab_search_hint, application.getString(titleRes))
+        val clock = when (userPreferencesDataStore.newTabClock.get()) {
+            NewTabClock.OFF -> "off"
+            NewTabClock.TWELVE_HOUR -> "12"
+            NewTabClock.TWENTY_FOUR_HOUR -> "24"
+        }
+        val scheme = if (themeProvider.isDarkTheme()) "dark" else "light"
         val content = parse(homePageReader.provideHtml()) andBuild {
             title { title }
             style { content ->
                 content.replace(
+                    "color-scheme: {SCHEME}",
+                    "color-scheme: $scheme;"
+                ).replace(
                     "--body-bg: {COLOR}",
                     "--body-bg: #${colorScheme.surface.toRgbHexString()};"
                 ).replace(
@@ -51,7 +63,13 @@ class HomePageFactory @Inject constructor(
                     "--box-bg: #${colorScheme.surfaceContainer.toRgbHexString()};"
                 ).replace(
                     "--box-txt: {COLOR}",
-                    "--box-txt: #${colorScheme.onSurfaceVariant.toRgbHexString()};"
+                    "--box-txt: #${colorScheme.onSurface.toRgbHexString()};"
+                ).replace(
+                    "--muted: {COLOR}",
+                    "--muted: #${colorScheme.onSurfaceVariant.toRgbHexString()};"
+                ).replace(
+                    "--border: {COLOR}",
+                    "--border: #${colorScheme.outlineVariant.toRgbHexString()};"
                 )
             }
             charset { UTF8 }
@@ -60,6 +78,8 @@ class HomePageFactory @Inject constructor(
                     html(
                         html()
                             .replace($$"${BASE_URL}", queryUrl)
+                            .replace($$"${CLOCK}", clock)
+                            .replace($$"${SEARCH_HINT}", searchHint.replace("\"", "\\\""))
                             .replace("&", "\\u0026")
                     )
                 }

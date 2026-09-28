@@ -9,8 +9,6 @@ import com.github.jaideepaher.slatebrowser.resources.ResourceProvider
 import com.github.jaideepaher.slatebrowser.search.SearchEngineChoice
 import com.github.jaideepaher.slatebrowser.search.SearchEngineProvider
 import com.github.jaideepaher.slatebrowser.search.Suggestions
-import com.github.jaideepaher.slatebrowser.search.engine.BaseSearchEngine
-import com.github.jaideepaher.slatebrowser.search.engine.CustomSearch
 import com.github.jaideepaher.slatebrowser.settings.framework.ClickableOnClick
 import com.github.jaideepaher.slatebrowser.settings.framework.ClickableState
 import com.github.jaideepaher.slatebrowser.settings.framework.SettingsBottomSheetChooserState
@@ -202,7 +200,7 @@ class GeneralSettingsScreen @Inject constructor(
                                         currentValue = if (!URLUtil.isAboutUrl(homepage)) {
                                             homepage
                                         } else {
-                                            "https://duckduckgo.com"
+                                            "https://www.google.com"
                                         }
                                     )
                                 },
@@ -219,8 +217,7 @@ class GeneralSettingsScreen @Inject constructor(
             ClickableState(
                 title = resourceProvider.stringResource(R.string.title_search_engine),
                 summary = {
-                    searchEngineProvider.provideSearchEngine()
-                        .getSearchEngineSummary(resourceProvider)
+                    resourceProvider.stringResource(searchEngineProvider.provideSearchEngine().titleRes)
                 },
                 onClick = ClickableOnClick.ItemSelector(
                     produceState = {
@@ -234,26 +231,8 @@ class GeneralSettingsScreen @Inject constructor(
                         )
                     },
                     onSelected = { index ->
-                        when (index) {
-                            SearchEngineChoice.CUSTOM.value -> ClickableOnClick.Input(
-                                produceState = {
-                                    SettingsBottomSheetInputState(
-                                        title = resourceProvider.stringResource(R.string.search_engine_custom),
-                                        hint = resourceProvider.stringResource(R.string.hint_url),
-                                        currentValue = userPreferencesDataStore.searchUrl.get()
-                                    )
-                                },
-                                onValueUpdated = {
-                                    ClickableOnClick.Action {
-                                        userPreferencesDataStore.searchChoice.set(SearchEngineChoice.CUSTOM)
-                                        userPreferencesDataStore.searchUrl.set(it)
-                                    }
-                                }
-                            )
-
-                            else -> ClickableOnClick.Action {
-                                userPreferencesDataStore.searchChoice.set(SearchEngineChoice.entries[index])
-                            }
+                        ClickableOnClick.Action {
+                            userPreferencesDataStore.searchChoice.set(SearchEngineChoice.entries[index])
                         }
                     },
                 )
@@ -292,18 +271,7 @@ private fun Suggestions.searchSuggestionChoiceToTitle(resourceProvider: Resource
         Suggestions.NONE -> resourceProvider.stringResource(R.string.search_suggestions_off)
         Suggestions.GOOGLE -> resourceProvider.stringResource(R.string.powered_by_google)
         Suggestions.DUCK -> resourceProvider.stringResource(R.string.powered_by_duck)
-        Suggestions.BAIDU -> resourceProvider.stringResource(R.string.powered_by_baidu)
-        Suggestions.NAVER -> resourceProvider.stringResource(R.string.powered_by_naver)
-        Suggestions.KAGI -> resourceProvider.stringResource(R.string.powered_by_kagi)
     }
-
-private fun BaseSearchEngine.getSearchEngineSummary(resourceProvider: ResourceProvider): String {
-    return if (this is CustomSearch) {
-        this.queryUrl
-    } else {
-        resourceProvider.stringResource(this.titleRes)
-    }
-}
 
 private fun ResourceProvider.homePageUrlToDisplayTitle(url: String): String = when (url) {
     SCHEME_HOMEPAGE -> stringResource(R.string.action_homepage)
