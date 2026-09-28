@@ -1,0 +1,30 @@
+package com.github.jaideepaher.slatebrowser.di
+
+import com.github.jaideepaher.slatebrowser.browser.BrowserContract
+import com.github.jaideepaher.slatebrowser.browser.BrowserNavigator
+import com.github.jaideepaher.slatebrowser.browser.cleanup.DelegatingExitCleanup
+import com.github.jaideepaher.slatebrowser.browser.cleanup.ExitCleanup
+import com.github.jaideepaher.slatebrowser.browser.tab.TabsRepository
+import android.app.Activity
+import androidx.fragment.app.FragmentActivity
+import dagger.Binds
+import dagger.Module
+
+/**
+ * Binds implementations to interfaces for the browser scope.
+ */
+@Module
+interface BrowserBindsModule {
+
+    @Binds
+    fun bindsActivity(fragmentActivity: FragmentActivity): Activity
+
+    @Binds
+    fun bindsBrowserModel(tabsRepository: TabsRepository): BrowserContract.Model
+
+    @Binds
+    fun bindsBrowserNavigator(browserNavigator: BrowserNavigator): BrowserContract.Navigator
+
+    @Binds
+    fun bindsExitCleanup(delegatingExitCleanup: DelegatingExitCleanup): ExitCleanup
+}

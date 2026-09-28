@@ -1,0 +1,16 @@
+# Domains blocked in addition to the StevenBlack porn + social lists.
+# One bare domain per line. Subdomains are covered automatically, so
+# "youtube.com" also blocks "m.youtube.com" and "music.youtube.com".
+# Regenerate the asset after editing: python3 tools/build-blocklist.py
+
+# YouTube - absent from StevenBlack's social list
+youtube.com
+youtu.be
+youtube-nocookie.com
+yt.be
+
+# Chat / community platforms absent from the social list
+discord.com
+discordapp.com
+telegram.org
+web.telegram.org

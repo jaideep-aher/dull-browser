@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>${TITLE}</title>
+    <style>
+        :root {
+            --body-bg: {COLOR};
+            --box-bg: {COLOR};
+            --box-txt: {COLOR};
+        }
+
+        html, body {
+            margin: 0;
+            background: var(--body-bg);
+            color: var(--box-txt);
+            font-family: sans-serif;
+        }
+
+        main {
+            max-width: 28rem;
+            margin: 0 auto;
+            padding: 18vh 28px 48px;
+            box-sizing: border-box;
+        }
+
+        #clock {
+            font-size: 56px;
+            font-weight: 400;
+            letter-spacing: -0.03em;
+            margin: 0 0 36px;
+        }
+
+        form {
+            margin: 0 0 40px;
+        }
+
+        #search_input {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid var(--box-txt);
+            background: transparent;
+            color: var(--box-txt);
+            font: inherit;
+            font-size: 18px;
+            padding: 8px 0;
+            outline: none;
+            border-radius: 0;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <p id="clock"></p>
+    <form onsubmit="return search()" autocomplete="off">
+        <input id="search_input" type="text" placeholder="Search" enterkeyhint="search"/>
+    </form>
+</main>
+<script>
+    function tick() {
+        var d = new Date();
+        var h = d.getHours();
+        var m = ("0" + d.getMinutes()).slice(-2);
+        document.getElementById("clock").textContent = ((h % 12) || 12) + ":" + m;
+    }
+    tick();
+    setInterval(tick, 10000);
+
+    function search() {
+        var value = document.getElementById("search_input").value;
+        if (value) {
+            window.location.href = "${BASE_URL}" + encodeURIComponent(value);
+        }
+        return false;
+    }
+</script>
+</body>
+</html>
