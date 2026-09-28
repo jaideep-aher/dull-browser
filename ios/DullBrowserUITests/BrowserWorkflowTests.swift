@@ -83,6 +83,16 @@ final class BrowserWorkflowTests: XCTestCase {
         }
     }
 
+    /// A tap sent mid-rotation is dropped, so wait for the layout to settle.
+    private func rotateToLandscape() {
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let window = app.windows.firstMatch
+        let rotated = expectation(for: NSPredicate { _, _ in window.frame.width > window.frame.height },
+                                  evaluatedWith: nil)
+        wait(for: [rotated], timeout: 5)
+        Thread.sleep(forTimeInterval: 1)
+    }
+
     private func capture(_ name: String) {
         let shot = XCTAttachment(screenshot: app.screenshot())
         shot.name = name
@@ -392,19 +402,133 @@ final class BrowserWorkflowTests: XCTestCase {
 
     func testControlsStayReachableInLandscape() {
         app.launch()
-        XCUIDevice.shared.orientation = .landscapeLeft
+        rotateToLandscape()
         defer { XCUIDevice.shared.orientation = .portrait }
-        // A tap sent mid-rotation is dropped, so wait for the layout to settle first.
-        let window = app.windows.firstMatch
-        let rotated = expectation(for: NSPredicate { _, _ in window.frame.width > window.frame.height },
-                                  evaluatedWith: nil)
-        wait(for: [rotated], timeout: 5)
-        Thread.sleep(forTimeInterval: 1)
         XCTAssertTrue(app.buttons["Settings"].isHittable)
         app.buttons["Settings"].tap()
         XCTAssertTrue(app.buttons["searchEngine_google"].waitForExistence(timeout: 5))
         capture("settings-landscape")
         app.buttons["settingsDone"].tap()
         XCTAssertTrue(app.buttons["tabsButton"].isHittable)
+    }
+
+    // MARK: - Extended coverage (N35–N42 in TEST_PLAN.md)
+
+    /// N35
+    func testSystemAppearanceIsSelectableAndPersists() {
+        app.launch()
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.buttons["System"].waitForExistence(timeout: 5))
+        app.buttons["System"].tap()
+        XCTAssertTrue(app.buttons["System"].isSelected)
+        XCTAssertFalse(app.buttons["Light"].isSelected)
+        app.buttons["settingsDone"].tap()
+        relaunch(restoringSession: false)
+        XCTAssertTrue(app.buttons["Settings"].waitForExistence(timeout: 5))
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.buttons["System"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["System"].isSelected)
+    }
+
+    /// N36
+    func testTextSizeChoicePersists() {
+        app.launch()
+        app.buttons["Settings"].tap()
+        let picker = app.buttons["textSize"]
+        scrollSettings(to: picker)
+        picker.tap()
+        let option = app.buttons["130%"]
+        XCTAssertTrue(option.waitForExistence(timeout: 5))
+        option.tap()
+        app.buttons["settingsDone"].tap()
+        relaunch(restoringSession: false)
+        app.buttons["Settings"].tap()
+        scrollSettings(to: picker)
+        XCTAssertTrue("\(picker.label) \(picker.value ?? "")".contains("130%"), picker.debugDescription)
+    }
+
+    /// N37
+    func testDesktopSiteRequestChangesPageLayout() {
+        app.launch()
+        open(server.url("/ua"))
+        XCTAssertTrue(page("Mobile layout").waitForExistence(timeout: 10))
+        app.buttons["Settings"].tap()
+        flip("desktopSites")
+        app.buttons["settingsDone"].tap()
+        app.buttons["Reload"].tap()
+        XCTAssertTrue(page("Desktop layout").waitForExistence(timeout: 10))
+        open("youtube.com")
+        XCTAssertTrue(app.staticTexts["blockedMessage"].waitForExistence(timeout: 5))
+    }
+
+    /// N38
+    func testServer404PageIsShownNotTreatedAsLoadFailure() {
+        app.launch()
+        open(server.url("/missing"))
+        XCTAssertTrue(page("Missing page").waitForExistence(timeout: 10))
+        XCTAssertFalse(app.staticTexts["This page did not load."].exists)
+        XCTAssertFalse(app.staticTexts["blockedMessage"].exists)
+    }
+
+    /// N39
+    func testServerGoingOfflineShowsErrorAndBackRecovers() {
+        app.launch()
+        open(server.url())
+        XCTAssertTrue(page("Page One").waitForExistence(timeout: 10))
+        server.stop()
+        app.webViews.links["Next page"].tap()
+        XCTAssertTrue(app.staticTexts["This page did not load."].waitForExistence(timeout: 15))
+        app.buttons["Back"].tap()
+        XCTAssertTrue(page("Page One").waitForExistence(timeout: 5))
+        open("youtube.com")
+        XCTAssertTrue(app.staticTexts["blockedMessage"].waitForExistence(timeout: 5))
+    }
+
+    /// N40
+    func testClearBrowsingDataRemovesCookies() {
+        app.launch()
+        open(server.url("/cookie"))
+        XCTAssertTrue(app.buttons["Reload"].waitForExistence(timeout: 10))
+        app.buttons["Reload"].tap()
+        XCTAssertTrue(page("Cookie kept").waitForExistence(timeout: 10))
+        app.buttons["Settings"].tap()
+        let clear = app.buttons["clearBrowsingData"]
+        scrollSettings(to: clear)
+        clear.tap()
+        // The confirmation dialog exposes its action button at two levels of the hierarchy.
+        let confirm = app.buttons["confirmClearBrowsingData"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(app.buttons["Browsing data cleared"].waitForExistence(timeout: 10))
+        app.buttons["settingsDone"].tap()
+        XCTAssertTrue(app.textFields["searchField"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["tabsButton"].value as? String, "1")
+        open(server.url("/cookie"))
+        XCTAssertTrue(page("Cookie none").waitForExistence(timeout: 10))
+    }
+
+    /// N41
+    func testBlockedPageHasNoWayThroughEvenInLandscape() {
+        app.launch()
+        open("youtube.com")
+        XCTAssertTrue(app.staticTexts["blockedMessage"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.webViews.count, 0)
+        XCTAssertEqual(app.links.count, 0)
+        XCTAssertFalse(app.buttons["Reload"].isEnabled)
+        rotateToLandscape()
+        defer { XCUIDevice.shared.orientation = .portrait }
+        XCTAssertTrue(app.staticTexts["blockedMessage"].exists)
+        XCTAssertEqual(app.webViews.count, 0)
+        app.buttons["Reload"].tap()
+        XCTAssertTrue(app.staticTexts["blockedMessage"].exists)
+        XCTAssertEqual(app.webViews.count, 0)
+    }
+
+    /// N42
+    func testMixedCaseWwwAddressIsBlocked() {
+        app.launch()
+        open("WWW.YouTube.com/watch?v=1")
+        XCTAssertTrue(app.staticTexts["blockedHost"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["blockedHost"].label, "www.youtube.com")
     }
 }

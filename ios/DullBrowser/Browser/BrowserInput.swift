@@ -24,6 +24,7 @@ enum BrowserInput {
 
     private static func looksLikeHost(_ text: String) -> Bool {
         let host = text.prefix { $0 != "/" && $0 != "?" && $0 != "#" }.split(separator: ":").first ?? ""
+        if host.lowercased() == "localhost" { return true }
         let labels = host.split(separator: ".", omittingEmptySubsequences: false)
         guard labels.count >= 2, labels.allSatisfy({ !$0.isEmpty }) else { return false }
         if labels.allSatisfy({ $0.allSatisfy(\.isNumber) }) { return labels.count == 4 }
