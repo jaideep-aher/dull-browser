@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// A clock and a search field. Nothing else.
+/// A clock, unless turned off, and a search field. Nothing else.
 struct NewTabView: View {
+    var showClock = true
     var onSubmit: (String) -> Void
 
     @State private var query = ""
@@ -10,12 +11,14 @@ struct NewTabView: View {
     var body: some View {
         VStack(spacing: 32) {
             Spacer()
-            TimelineView(.everyMinute) { context in
-                Text(context.date, format: .dateTime.hour().minute())
-                    .font(.system(size: 64, weight: .light))
-                    .monospacedDigit()
-                    .foregroundStyle(Theme.ink)
-                    .accessibilityIdentifier("clock")
+            if showClock {
+                TimelineView(.everyMinute) { context in
+                    Text(context.date, format: .dateTime.hour().minute())
+                        .font(.system(size: 64, weight: .light))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.ink)
+                        .accessibilityIdentifier("clock")
+                }
             }
             TextField("Search", text: $query)
                 .focused($focused)
@@ -38,6 +41,8 @@ struct NewTabView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.paper)
+        .accessibilityElement(children: .contain)
         .contentShape(Rectangle())
         .onTapGesture { focused = false }
     }

@@ -7,6 +7,7 @@ final class FixtureServer {
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "DullBrowserUITests.FixtureServer")
     private(set) var port: UInt16 = 0
+    private var visits = 0
 
     func start(completion: @escaping () -> Void) throws {
         let listener = try NWListener(using: .tcp, on: .any)
@@ -25,6 +26,22 @@ final class FixtureServer {
                 let response: String
                 if path == "/redirect" {
                     response = "HTTP/1.1 302 Found\r\nLocation: https://youtube.com/\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                } else if path == "/count" {
+                    let visit = (self?.visits ?? 0) + 1
+                    self?.visits = visit
+                    let body = """
+                    <!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Visit \(visit)</title></head>
+                    <body style="min-height: 150vh"><h1>Visit \(visit)</h1></body></html>
+                    """
+                    response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nCache-Control: no-store\r\nContent-Length: \(body.utf8.count)\r\nConnection: close\r\n\r\n\(body)"
+                } else if path == "/script" {
+                    let body = """
+                    <!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Script off</title></head>
+                    <body><h1>Script off</h1>
+                    <script>document.title = "Script ran"; document.querySelector("h1").textContent = "Script ran";</script>
+                    </body></html>
+                    """
+                    response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nCache-Control: no-store\r\nContent-Length: \(body.utf8.count)\r\nConnection: close\r\n\r\n\(body)"
                 } else {
                     let title = path == "/two" ? "Page Two" : "Page One"
                     let body = """

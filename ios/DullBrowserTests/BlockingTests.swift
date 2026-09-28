@@ -26,7 +26,7 @@ final class BlocklistTests: XCTestCase {
         for listed in ["bbc.com", "bbc.co.uk", "pornhub.com", "xvideos.com", "xnxx.com", "xhamster.com"] {
             XCTAssertTrue(domains.contains(listed), listed)
         }
-        for open in ["example.com", "kagi.com", "google.com"] {
+        for open in ["example.com", "duckduckgo.com", "google.com", "bing.com"] {
             XCTAssertFalse(domains.contains(open), open)
         }
     }
@@ -50,7 +50,7 @@ final class NavigationHopsTests: XCTestCase {
 
     func testSearchQueriesAreNotUnwrapped() {
         XCTAssertEqual(hosts("https://www.google.com/search?q=https://bbc.com"), ["www.google.com"])
-        XCTAssertEqual(hosts("https://kagi.com/search?q=https%3A%2F%2Fbbc.com"), ["kagi.com"])
+        XCTAssertEqual(hosts("https://duckduckgo.com/?q=https%3A%2F%2Fbbc.com"), ["duckduckgo.com"])
     }
 
     func testAmp() {
@@ -88,11 +88,11 @@ final class SiteBlockerTests: XCTestCase {
 
 final class BrowserInputTests: XCTestCase {
     func testAddressesAndSearches() {
-        XCTAssertEqual(BrowserInput.url(for: "example.com", searchEngine: .kagi)?.absoluteString, "https://example.com")
-        XCTAssertEqual(BrowserInput.url(for: "http://example.com/a", searchEngine: .kagi)?.absoluteString, "http://example.com/a")
-        XCTAssertEqual(BrowserInput.url(for: "bbc", searchEngine: .kagi)?.absoluteString, "https://kagi.com/search?q=bbc")
-        XCTAssertEqual(BrowserInput.url(for: "bbc news & more", searchEngine: .kagi)?.absoluteString,
-                       "https://kagi.com/search?q=bbc%20news%20%26%20more")
+        XCTAssertEqual(BrowserInput.url(for: "example.com", searchEngine: .google)?.absoluteString, "https://example.com")
+        XCTAssertEqual(BrowserInput.url(for: "http://example.com/a", searchEngine: .google)?.absoluteString, "http://example.com/a")
+        XCTAssertEqual(BrowserInput.url(for: "bbc", searchEngine: .google)?.absoluteString, "https://www.google.com/search?q=bbc")
+        XCTAssertEqual(BrowserInput.url(for: "bbc news & more", searchEngine: .google)?.absoluteString,
+                       "https://www.google.com/search?q=bbc%20news%20%26%20more")
     }
 }
 

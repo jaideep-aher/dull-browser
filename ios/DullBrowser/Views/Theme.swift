@@ -1,9 +1,68 @@
 import SwiftUI
+import UIKit
 
+/// Colors come from the asset catalog, each with a light and a dark variant.
+/// Light is plain white paper with near-black ink.
 enum Theme {
-    static let paper = Color(red: 0xF3 / 255, green: 0xEF / 255, blue: 0xE6 / 255)
-    static let ink = Color(red: 0x1C / 255, green: 0x19 / 255, blue: 0x17 / 255)
-    static let muted = Color(red: 0x6F / 255, green: 0x6A / 255, blue: 0x64 / 255)
+    static let paperColor = asset("Paper")
+    static let inkColor = asset("AccentColor")
+    static let mutedColor = asset("Muted")
+
+    static let paper = Color(uiColor: paperColor)
+    static let ink = Color(uiColor: inkColor)
+    static let muted = Color(uiColor: mutedColor)
+    static let hairline = muted.opacity(0.3)
+
+    private static func asset(_ name: String) -> UIColor {
+        guard let color = UIColor(named: name, in: .main, compatibleWith: nil) else {
+            fatalError("Missing color \(name) in Assets.xcassets")
+        }
+        return color
+    }
+}
+
+enum Appearance: String, CaseIterable, Identifiable {
+    case light, dark, system
+
+    static let preferenceKey = "appearance"
+    var id: String { rawValue }
+
+    static func resolve(_ stored: String?) -> Appearance {
+        stored.flatMap(Appearance.init(rawValue:)) ?? .light
+    }
+
+    var name: String {
+        switch self {
+        case .light: "Light"
+        case .dark: "Dark"
+        case .system: "System"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .light: .light
+        case .dark: .dark
+        case .system: nil
+        }
+    }
+
+    var interfaceStyle: UIUserInterfaceStyle {
+        switch self {
+        case .light: .light
+        case .dark: .dark
+        case .system: .unspecified
+        }
+    }
+
+    /// Also set on the window: `preferredColorScheme(nil)` does not undo an earlier explicit
+    /// choice, and web content reads the window's style for `prefers-color-scheme`.
+    @MainActor
+    func apply() {
+        for scene in UIApplication.shared.connectedScenes {
+            (scene as? UIWindowScene)?.windows.forEach { $0.overrideUserInterfaceStyle = interfaceStyle }
+        }
+    }
 }
 
 /// Circle with one horizontal line, the same mark as the app icon. A pause mark would be two bars.

@@ -2,11 +2,15 @@ import SwiftUI
 import WebKit
 
 struct ContentView: View {
-    @StateObject private var session = BrowserSession(restore: !UserDefaults.standard.bool(forKey: "UITestResetSession"))
+    @StateObject private var session = BrowserSession(
+        restore: !UserDefaults.standard.bool(forKey: "UITestResetSession") && !BrowserPreferences.startsFresh)
     @AppStorage("introSeen", store: BrowserPreferences.defaults) private var introSeen = false
+    @AppStorage(Appearance.preferenceKey, store: BrowserPreferences.defaults) private var appearance = Appearance.light.rawValue
     @Environment(\.scenePhase) private var scenePhase
     @State private var showingTabs = false
     @State private var showingSettings = false
+
+    private var scheme: ColorScheme? { Appearance.resolve(appearance).colorScheme }
 
     var body: some View {
         ZStack {
@@ -19,19 +23,25 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
-        .sheet(isPresented: $showingTabs) { TabSwitcherView(session: session) }
-        .sheet(isPresented: $showingSettings) { SettingsView() }
+        .sheet(isPresented: $showingTabs) {
+            TabSwitcherView(session: session).preferredColorScheme(scheme)
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(session: session).preferredColorScheme(scheme)
+        }
+        .preferredColorScheme(scheme)
         .onOpenURL { session.activeTab.openIncoming($0) }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { session.save() }
         }
+        .onAppear { Appearance.resolve(appearance).apply() }
+        .onChange(of: appearance) { _, value in Appearance.resolve(value).apply() }
         .task {
             #if DEBUG
             if let address = UserDefaults.standard.string(forKey: "DebugOpen") { session.activeTab.open(address) }
             #endif
         }
         .animation(.easeOut(duration: 0.2), value: introSeen)
-        .preferredColorScheme(.light)
         .tint(Theme.ink)
     }
 }
@@ -41,11 +51,13 @@ private struct BrowserPage: View {
     let tabCount: Int
     let showTabs: () -> Void
     let showSettings: () -> Void
+    @AppStorage(BrowserPreferences.showClockKey, store: BrowserPreferences.defaults) private var showClock = true
+    @AppStorage(BrowserPreferences.pageZoomKey, store: BrowserPreferences.defaults) private var pageZoom = 1.0
 
     var body: some View {
         VStack(spacing: 0) {
             if model.showingNewTab {
-                NewTabView { model.open($0) }
+                NewTabView(showClock: showClock) { model.open($0) }
             } else {
                 ZStack {
                     if let host = model.blockedHost {
@@ -53,7 +65,7 @@ private struct BrowserPage: View {
                     } else if let error = model.loadError {
                         LoadErrorView(message: error)
                     } else {
-                        WebViewHost(webView: model.webView)
+                        WebViewHost(webView: model.webView, pageZoom: pageZoom)
                             .id(ObjectIdentifier(model.webView))
                     }
                 }
@@ -65,8 +77,11 @@ private struct BrowserPage: View {
 
 struct WebViewHost: UIViewRepresentable {
     let webView: WKWebView
+    let pageZoom: Double
 
     func makeUIView(context: Context) -> WKWebView { webView }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        if uiView.pageZoom != pageZoom { uiView.pageZoom = pageZoom }
+    }
 }

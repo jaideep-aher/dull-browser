@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import WebKit
 
 /// Each tab owns its web view and history. Only the selected restored tab loads immediately.
 @MainActor
@@ -72,6 +73,18 @@ final class BrowserSession: ObservableObject {
         }
         observeTabs()
         save()
+    }
+
+    /// Closes every tab and removes cookies, cache and site storage. The block list is untouched.
+    func clearBrowsingData(in store: WKWebsiteDataStore? = nil) async {
+        let store = store ?? .default()
+        tabs.forEach { $0.close() }
+        let replacement = BrowserModel()
+        tabs = [replacement]
+        selectedID = replacement.id
+        observeTabs()
+        save()
+        await store.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
     }
 
     func save() {

@@ -139,12 +139,27 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
     func reloadOrStop() {
         if webView.isLoading {
             webView.stopLoading()
-        } else if blockedHost == nil {
-            if loadError != nil, let requestedURL {
-                load(requestedURL)
-            } else {
-                webView.reload()
-            }
+        } else {
+            reload()
+        }
+    }
+
+    /// Every reload goes back through the navigation delegate, so a listed page stays closed.
+    func reload() {
+        guard blockedHost == nil, !showingNewTab || restoredURL != nil else { return }
+        if restoredURL != nil {
+            restoreIfNeeded()
+        } else if loadError != nil || webView.backForwardList.currentItem == nil, let target = requestedURL ?? url {
+            load(target)
+        } else {
+            webView.reload()
+        }
+    }
+
+    @objc private func pulledToRefresh(_ control: UIRefreshControl) {
+        reload()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self, weak control] in
+            if self?.webView.isLoading != true { control?.endRefreshing() }
         }
     }
 
@@ -173,7 +188,8 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
         let view = WKWebView(frame: .zero, configuration: config)
         view.allowsBackForwardNavigationGestures = true
         view.isOpaque = false
-        view.backgroundColor = UIColor(Theme.paper)
+        view.backgroundColor = Theme.paperColor
+        view.underPageBackgroundColor = Theme.paperColor
         #if DEBUG
         view.isInspectable = true
         #endif
@@ -184,9 +200,15 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
         view.navigationDelegate = self
         view.uiDelegate = self
         url = view.url
+        let refresh = UIRefreshControl()
+        refresh.addTarget(self, action: #selector(pulledToRefresh(_:)), for: .valueChanged)
+        view.scrollView.refreshControl = refresh
         view.publisher(for: \.title).sink { [weak self] in self?.title = $0 ?? "" }.store(in: &observers)
         view.publisher(for: \.url).sink { [weak self] in self?.url = $0 }.store(in: &observers)
-        view.publisher(for: \.isLoading).sink { [weak self] in self?.isLoading = $0 }.store(in: &observers)
+        view.publisher(for: \.isLoading).sink { [weak self, weak refresh] loading in
+            self?.isLoading = loading
+            if !loading { refresh?.endRefreshing() }
+        }.store(in: &observers)
         view.publisher(for: \.estimatedProgress).sink { [weak self] in self?.progress = $0 }.store(in: &observers)
         view.publisher(for: \.canGoBack).sink { [weak self] in self?.canGoBack = $0 }.store(in: &observers)
         view.publisher(for: \.canGoForward).sink { [weak self] in self?.canGoForward = $0 }.store(in: &observers)
@@ -212,7 +234,16 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
 }
 
 extension BrowserModel: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction) async -> WKNavigationActionPolicy {
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor action: WKNavigationAction,
+        preferences: WKWebpagePreferences
+    ) async -> (WKNavigationActionPolicy, WKWebpagePreferences) {
+        let policy = await policy(for: action, in: webView)
+        return (policy, BrowserPreferences.webpagePreferences(preferences))
+    }
+
+    private func policy(for action: WKNavigationAction, in webView: WKWebView) async -> WKNavigationActionPolicy {
         guard webView === self.webView, let url = action.request.url else { return .cancel }
         let isMainFrame = action.targetFrame?.isMainFrame ?? true
 
@@ -314,7 +345,8 @@ extension BrowserModel: WKNavigationDelegate {
     }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-        webView.reload()
+        guard webView === self.webView else { return }
+        reload()
     }
 
     private func report(_ error: Error, in view: WKWebView) {
@@ -329,7 +361,7 @@ extension BrowserModel: WKNavigationDelegate {
 }
 
 extension BrowserModel: WKUIDelegate {
-    /// New-window links get their own tab, through the same blocking gate.
+    /// New-window links get their own tab, or this one if the user prefers, through the same blocking gate.
     func webView(
         _ webView: WKWebView,
         createWebViewWith configuration: WKWebViewConfiguration,
@@ -337,9 +369,16 @@ extension BrowserModel: WKUIDelegate {
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
         if action.targetFrame == nil, let target = action.request.url {
-            if let openInNewTab { openInNewTab(target) }
-            else { load(target) }
+            openNewWindowLink(target)
         }
         return nil
+    }
+
+    func openNewWindowLink(_ target: URL, defaults: UserDefaults = BrowserPreferences.defaults) {
+        if BrowserPreferences.flag(BrowserPreferences.newWindowTabsKey, default: true, in: defaults), let openInNewTab {
+            openInNewTab(target)
+        } else {
+            load(target)
+        }
     }
 }

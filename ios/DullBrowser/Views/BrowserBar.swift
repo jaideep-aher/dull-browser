@@ -65,6 +65,11 @@ struct BrowserBar: View {
             .padding(.vertical, 6)
         }
         .background(Theme.paper)
+        .overlay(alignment: .top) {
+            if !model.showingNewTab {
+                Rectangle().fill(Theme.hairline).frame(height: 0.5)
+            }
+        }
         .onAppear { text = model.addressForDisplay }
         .onChange(of: model.addressForDisplay) { _, value in
             if !editing { text = value }
