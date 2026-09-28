@@ -17,6 +17,24 @@ If xcodebuild reports that CoreSimulator is out of date, run `sudo xcodebuild -r
 
 To change what is blocked, edit the list on the Android side and build again.
 
+## Run on your iPhone
+
+The project uses automatic signing with bundle id `app.slate.browser.ios`. No team is committed, so choose your own.
+
+1. Connect the iPhone by USB, unlock it, and tap **Trust** on the phone.
+2. Open `DullBrowser.xcodeproj`. In **Xcode › Settings › Accounts**, sign in with your Apple ID.
+3. Select the **DullBrowser** target, then **Signing & Capabilities**. Keep **Automatically manage signing** on and pick your **Team**. Do the same for **DullBrowserTests** and **DullBrowserUITests**. If the bundle id is taken, change it to something unique, such as `app.slate.browser.ios.yourname`, and do not commit that change.
+4. Choose the iPhone as the run destination and press Run once. If iOS asks, turn on **Settings › Privacy & Security › Developer Mode** and restart the phone.
+5. With a free Personal Team, trust the certificate under **Settings › General › VPN & Device Management**.
+6. Find the phone's UDID with `xcrun devicectl list devices`, then run the tests from the repo root:
+
+```bash
+xcodebuild -project ios/DullBrowser.xcodeproj -scheme DullBrowser \
+  -destination 'platform=iOS,id=<UDID>' -allowProvisioningUpdates DEVELOPMENT_TEAM=<TEAM_ID> test
+```
+
+Your Team ID is shown in Xcode's team menu and in the developer account's Membership page. A free Personal Team allows three sideloaded apps, and UI tests install an extra runner app. Delete other sideloaded apps first, or run only `-only-testing:DullBrowserTests`. Keep the phone unlocked while UI tests run. You can also run tests in Xcode with **Product › Test** (⌘U).
+
 ## Tabs and settings
 
 The numbered **Tabs** button is available on both the start page and web pages. Open it to create, switch, or close tabs. Each tab keeps its own page and Back/Forward history while the app is open. Tab addresses and the selected tab are restored after relaunch; unsaved form contents and full navigation history are not restored after the app process ends.

@@ -44,7 +44,7 @@ Browse the [blocked sites by category](BLOCKED_SITES.md), with complete lists fo
 2. **Search or enter a website.** The start page is just a clock and a search box.
 3. **Browse with fewer distractions.** If a site is blocked, you get a short message instead of the page. There is no “open anyway.”
 
-Search uses Google by default. On Android and iOS, you can change the search engine in Settings. The Android Full build also offers optional ad blocking. None of the settings change the site-blocking rules.
+On Android, search uses Google by default, and Settings lets you switch to DuckDuckGo or Bing. The iOS app also has a search engine setting. Android has a Light (default), Dark, or Follow system theme, a one-tap "Clear all browsing data" in Privacy settings, and the Android Full build offers optional ad blocking. None of these change the site-blocking rules.
 
 **Scope:** Dull blocks sites inside this browser. It does not block other apps or browsers. It is designed to help you spend less time browsing; it does not promise a specific number of hours saved or catch every distracting site.
 
@@ -106,6 +106,8 @@ open ios/DullBrowser.xcodeproj
 ```
 
 Choose the `DullBrowser` scheme and an iPhone simulator, then run. For command-line builds and tests, see the [iOS README](https://github.com/jaideep-aher/dull-browser/blob/ios/ios/README.md).
+
+On iOS, search also uses Google by default, and Settings lets you switch to DuckDuckGo or Bing. Appearance is Light (default), Dark, or System, and Privacy settings can clear browsing data. None of these change the site-blocking rules.
 
 </details>
 
