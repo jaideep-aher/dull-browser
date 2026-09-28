@@ -21,6 +21,11 @@ class AboutSettingsScreen @Inject constructor(
                 onClick = ClickableOnClick.Action {}
             ),
             ClickableState(
+                title = resourceProvider.stringResource(R.string.source_code),
+                summary = { SOURCE_CODE_URL.removePrefix("https://") },
+                onClick = ClickableOnClick.WebLink(SOURCE_CODE_URL)
+            ),
+            ClickableState(
                 title = resourceProvider.stringResource(R.string.licenses),
                 onClick = ClickableOnClick.Navigate(SettingsNavigation.LICENSES)
             ),
@@ -37,3 +42,5 @@ class AboutSettingsScreen @Inject constructor(
         )
     )
 }
+
+private const val SOURCE_CODE_URL = "https://github.com/jaideep-aher/dull-browser"

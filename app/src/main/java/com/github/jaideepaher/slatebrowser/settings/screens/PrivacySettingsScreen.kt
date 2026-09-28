@@ -103,6 +103,35 @@ class PrivacySettingsScreen @Inject constructor(
                 }
             ),
             ClickableState(
+                title = resourceProvider.stringResource(R.string.clear_all_browsing_data),
+                summary = { resourceProvider.stringResource(R.string.clear_all_browsing_data_summary) },
+                onClick = ClickableOnClick.Confirmation(
+                    produceState = {
+                        SettingsDialogConfirmationState(
+                            title = resourceProvider.stringResource(R.string.clear_all_browsing_data),
+                            message = resourceProvider.stringResource(R.string.dialog_clear_all_browsing_data),
+                            negativeAction = resourceProvider.stringResource(R.string.no),
+                            positiveAction = resourceProvider.stringResource(R.string.yes),
+                        )
+                    },
+                    onConfirmed = {
+                        if (it) {
+                            ClickableOnClick.Snackbar {
+                                webUtils.clearHistory()
+                                webUtils.clearCookies()
+                                webUtils.clearWebStorage()
+                                webUtils.clearCache()
+                                SettingsSnackBarState(
+                                    resourceProvider.stringResource(R.string.message_browsing_data_cleared)
+                                )
+                            }
+                        } else {
+                            ClickableOnClick.Action {}
+                        }
+                    }
+                )
+            ),
+            ClickableState(
                 title = resourceProvider.stringResource(R.string.clear_cache),
                 onClick = ClickableOnClick.Snackbar {
                     webUtils.clearCache()

@@ -63,7 +63,7 @@ class NavigationHopsTest {
 
     @Test
     fun `ordinary search query is left alone`() {
-        val hops = NavigationHops.extract("https://kagi.com/search?q=https%3A%2F%2Fyoutube.com")
-        assertThat(hops).containsExactly("https://kagi.com/search?q=https%3A%2F%2Fyoutube.com")
+        val hops = NavigationHops.extract("https://www.google.com/search?q=https%3A%2F%2Fyoutube.com")
+        assertThat(hops).containsExactly("https://www.google.com/search?q=https%3A%2F%2Fyoutube.com")
     }
 }

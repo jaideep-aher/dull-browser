@@ -105,7 +105,6 @@
     <string name="max_tabs">これ以上タブは開けません</string>
     <string name="message_text_copied">テキストをクリップボードにコピーしました</string>
     <string name="message_link_copied">リンクをクリップボードにコピーしました</string>
-    <string name="search_engine_custom">カスタム URL</string>
     <string name="message_blocked_local">ファイルを読み込めませんでした</string>
     <string name="licenses">オープンソース ライセンス</string>
     <string name="suggestion">検索 :</string>
@@ -129,7 +128,6 @@
     <string name="search_suggestions">検索候補表示</string>
     <string name="powered_by_google">Google を使用する</string>
     <string name="powered_by_duck">DuckDuckGo を使用する</string>
-    <string name="powered_by_baidu">Baidu を使用する</string>
     <string name="search_suggestions_off">検索候補を表示しない</string>
     <string name="http_proxy">HTTP プロキシ</string>
     <string-array name="proxy_choices_array">
