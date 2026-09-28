@@ -35,4 +35,4 @@ JDK 21 or newer, and the Android SDK.
 
 The site list is in both. It is not the ad-block switch.
 
-Built on [Lightning Browser](https://github.com/anthonycr/Lightning-Browser) by Anthony Restaino. Mozilla Public License 2.0. See `LICENSE`.
+Built on Mozilla Public License 2.0. See `LICENSE`.
