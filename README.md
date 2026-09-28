@@ -1,27 +1,43 @@
 # Dull Browser
 
-**Look something up. Get back to work.**
+**Less scrolling. More living.**
 
-Dull is an Android browser for school, university, and focused work. It keeps social feeds, video platforms, news sites, and adult sites closed, with no in-app switch to let them through.
+Dull Browser is an **Android browser built to help you reduce screen time** by blocking addictive distractions: **YouTube, social media, porn, and other time-wasting sites**. Search for what you need, finish what you came to do, and put your phone down.
 
-A new tab gives you a clock and a search box. No feed. No suggested links. Nothing asking you to stay.
+No “just five more minutes” button. Blocked sites stay blocked.
 
-## Why Dull?
+## What is it for?
 
-The assignment and the distraction live on the same phone. A quick search can turn into an evening of scrolling. Dull puts a fixed boundary between the two: when a listed site is blocked, there is no “open anyway,” temporary pause, or per-site exception.
+- **Spend less time online.** Stop a quick lookup from becoming an hour of scrolling.
+- **Stay focused.** Browse for study, work, and everyday tasks without drifting into feeds or videos.
+- **Make distraction harder.** The blocklist is built in, with no in-app switch to turn it off.
 
-You can still use another browser. The point is to make leaving your work a deliberate decision.
+## What does it block?
 
-## What you get
+| Distraction | Examples |
+| --- | --- |
+| Video rabbit holes | YouTube, including mobile and short links |
+| Social feeds | Instagram, TikTok, Facebook, X/Twitter, Reddit |
+| Porn | Adult sites on the blocklist, plus additional family DNS filtering |
+| News scrolling | News sites on the blocklist |
 
-- **A quiet start page:** a clock and search, without recommended content.
-- **Built-in site blocking:** a bundled domain list covering social, video, news, and adult sites, including their subdomains.
-- **Checks along the way:** typed addresses, links opened from other apps, and supported redirect links are checked for blocked destinations.
-- **A simple blocked page:** the site name and a short message, with no override button.
-- **Kagi search by default:** other search engines are available in settings.
-- **Optional ad blocking:** available in the Full build, separately from the always-on site list.
+See the [full site list](app/src/main/assets/blocklist.txt). Listed domains and their subdomains are blocked, including when you reach them through supported search redirects.
 
-## Build and install
+## How do I use it?
+
+1. **Open Dull** when you need to look something up.
+2. **Search or enter a website.** The start page is just a clock and a search box.
+3. **Browse with fewer distractions.** If a site is blocked, you get a short message instead of the page. There is no “open anyway.”
+
+Search defaults to Kagi and can be changed in settings. The Full build also offers optional ad blocking.
+
+**Scope:** Dull blocks sites inside this browser. It does not block other apps or browsers. It is designed to help you spend less time browsing; it does not promise a specific number of hours saved or catch every distracting site.
+
+## Install from source
+
+<details>
+<summary>Android build and install instructions</summary>
+
 
 ### Requirements
 
@@ -61,42 +77,40 @@ On Windows, use `gradlew.bat` in place of `./gradlew`.
 
 For the Lite build, use `assembleSlateLiteDebug` or `installSlateLiteDebug`. The `slate` names are internal build and package identifiers; the app is Dull Browser.
 
+</details>
+
 ## How blocking works
 
-The browser checks hosts against [`blocklist.txt`](app/src/main/assets/blocklist.txt), which is bundled in the APK. An entry such as `youtube.com` also covers `m.youtube.com` and `music.youtube.com`. Supported search redirects, AMP links, and Android intent links are inspected for embedded destinations, and navigation checks also cover the destination page.
+The site list ships with the app and stays on in both builds. Changing it requires rebuilding the app. Ad-block settings do not affect site blocking.
 
-For top-level navigation to hosts not blocked by the bundled list, the browser also consults Cloudflare's family DNS-over-HTTPS resolver. These checks send the hostname to Cloudflare. If the resolver is unavailable, the additional check allows navigation; the bundled list still applies.
+For page visits not blocked by the local list, Dull also checks the hostname with Cloudflare's family DNS-over-HTTPS resolver. This sends the hostname to Cloudflare. If that check fails, navigation is allowed unless the local list blocks it.
 
-Blocking applies **inside Dull Browser**. It does not restrict other browsers or apps, and a domain list cannot catch every distracting or adult site. Ad-block settings and ad-block exceptions do not disable the site list.
+## Contribute
 
-## Maintain the blocklist
+Found a site that should be blocked, or a useful site blocked by mistake? [Open an issue](https://github.com/jaideep-aher/dull-browser/issues) with the URL and what happened.
 
-The generated list combines the upstream sources defined in [`tools/build-blocklist.py`](tools/build-blocklist.py) with two local files:
+<details>
+<summary>Update the blocklist and run tests</summary>
 
-- [`tools/extra-domains.txt`](tools/extra-domains.txt) for additional domains.
-- [`tools/news-domains.txt`](tools/news-domains.txt) for news domains.
-
-Edit the relevant local file, then regenerate the asset and rebuild:
+Edit [`tools/extra-domains.txt`](tools/extra-domains.txt) or [`tools/news-domains.txt`](tools/news-domains.txt), then regenerate and rebuild:
 
 ```bash
 python3 tools/build-blocklist.py
 ./gradlew assembleSlateFullDebug
 ```
 
-Regeneration requires Python 3 and an internet connection. Review the generated diff before committing it. Normal app builds use the checked-in asset and do not need this step. Changing the bundled list requires a new build; users cannot edit it in the app.
+The script merges upstream sources with the local lists. It requires Python 3 and internet access. Review the generated diff before committing. Normal builds use the checked-in list and skip this step.
 
-## Tests and contributions
-
-Run the Full variant's unit tests:
+Run unit tests, including domain matching and redirect extraction:
 
 ```bash
 ./gradlew testSlateFullDebugUnitTest
 ```
 
-Tests include domain matching and redirect extraction. See [`CONTRIBUTING.md`](CONTRIBUTING.md) before proposing changes. The core constraint is intentional: no switch, allowlist, or “open anyway” for the site blocker.
+</details>
 
-Report bugs or incorrect blocks in [Issues](https://github.com/jaideep-aher/dull-browser/issues), including the affected URL, app variant, Android version, and steps to reproduce.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes. Keep the core idea intact: no switch, allowlist, or “open anyway” for blocked sites.
 
 ## License
 
-Licensed under the [Mozilla Public License 2.0](LICENSE).
+[Mozilla Public License 2.0](LICENSE).
