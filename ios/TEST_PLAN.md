@@ -7,7 +7,8 @@ The reported problems are missing tab management and missing search-engine setti
 | Area | Checks | Test suite |
 | --- | --- | --- |
 | Tabs | Add without replacing old page; switch with form state intact; close background, active, and last tab; restore tab URLs and selected tab after relaunch | BrowserSessionTests, BrowserWorkflowTests |
-| Search | Each engine builds correctly encoded queries; typed URLs remain URLs; selection persists; new searches use selected engine | SearchEngineTests, BrowserInputTests, BrowserWorkflowTests |
+| Search | Google is the default; a saved engine that is no longer offered falls back to Google; each engine builds correctly encoded queries; typed URLs remain URLs; selection persists; new searches use selected engine | SearchEngineTests, PreferenceMigrationTests, BrowserInputTests, BrowserWorkflowTests |
+| Settings | Light is the default and white; Dark and System apply and persist; clock, JavaScript, desktop sites, new-window links, and start-fresh behave as labeled; no setting touches blocking | AppearanceTests, PageSettingsTests, BrowserWorkflowTests |
 | Blocking | Direct domains, subdomains, lookalikes, Google wrappers, AMP, redirects, family DNS, and blocking after engine changes | BlockingTests, BrowserUITests, BrowserWorkflowTests |
 | Navigation | Back/Forward, blocked-page recovery, failed-load recovery, new-window links become tabs | BrowserWorkflowTests |
 | Layout | Tabs and Settings available on start and content pages; landscape controls; blocked content hidden from accessibility | BrowserWorkflowTests |

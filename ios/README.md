@@ -21,8 +21,14 @@ To change what is blocked, edit the list on the Android side and build again.
 
 The numbered **Tabs** button is available on both the start page and web pages. Open it to create, switch, or close tabs. Each tab keeps its own page and Back/Forward history while the app is open. Tab addresses and the selected tab are restored after relaunch; unsaved form contents and full navigation history are not restored after the app process ends.
 
-Use **Settings** (the gear) to choose Kagi, Google, DuckDuckGo, or Bing. The selection persists and applies to searches from both the start page and address bar. Kagi is the initial default and requires an account.
+**Settings** (the gear) holds a short list of choices:
 
-Site blocking stays on in every tab and with every search engine. There is no setting to unblock a site.
+- **Search engine:** Google (default), DuckDuckGo, or Bing. Used by both the start page and address bar. A saved choice that is no longer offered falls back to Google.
+- **Appearance:** Light (default, plain white), Dark, or System.
+- **Pages:** show or hide the clock, text size, request desktop sites, JavaScript on or off, and whether links that ask for a new window open a new tab.
+- **Privacy:** clear browsing data now, or start fresh each launch (previous tabs, cookies, and site data are dropped when Dull opens again).
+- **About:** app version and the size of the site list.
+
+Site blocking stays on in every tab and with every setting. There is no setting to unblock a site.
 
 See [TEST_PLAN.md](TEST_PLAN.md) for automated and physical-device checks.
