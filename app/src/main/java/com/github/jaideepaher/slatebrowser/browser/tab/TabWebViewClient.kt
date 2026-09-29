@@ -7,6 +7,15 @@ import com.github.jaideepaher.slatebrowser.adblock.siteblock.BlockedPage
 import com.github.jaideepaher.slatebrowser.adblock.siteblock.NavigationHops
 import com.github.jaideepaher.slatebrowser.adblock.siteblock.SiteBlocker
 import com.github.jaideepaher.slatebrowser.browser.tab.settings.TabSettings
+import com.github.jaideepaher.slatebrowser.focus.Feature
+import com.github.jaideepaher.slatebrowser.focus.FocusClock
+import com.github.jaideepaher.slatebrowser.focus.FocusCoordinator
+import com.github.jaideepaher.slatebrowser.focus.PauseList
+import com.github.jaideepaher.slatebrowser.focus.PauseRequest
+import com.github.jaideepaher.slatebrowser.focus.PauseRules
+import com.github.jaideepaher.slatebrowser.focus.ReadLater
+import com.github.jaideepaher.slatebrowser.focus.Stats
+import com.github.jaideepaher.slatebrowser.html.homepage.HomePageFactory
 import com.github.jaideepaher.slatebrowser.concurrency.TabCoroutineScope
 import com.github.jaideepaher.slatebrowser.databinding.DialogAuthRequestBinding
 import com.github.jaideepaher.slatebrowser.databinding.DialogSslWarningBinding
@@ -67,6 +76,12 @@ class TabWebViewClient @AssistedInject constructor(
     @Assisted("files") private val filesStoragePathHandler: InternalStoragePathHandler,
     @Assisted private val tabCoroutineScope: TabCoroutineScope,
     @Assisted private val tabSettings: TabSettings,
+    private val pauseList: PauseList,
+    private val stats: Stats,
+    private val readLater: ReadLater,
+    private val focusCoordinator: FocusCoordinator,
+    private val clock: FocusClock,
+    private val homePageFactory: HomePageFactory,
 ) : WebViewClient() {
 
     /**
@@ -152,6 +167,8 @@ class TabWebViewClient @AssistedInject constructor(
     /** Stops the committed-page replacement from loading the blocked document in a loop. */
     private var lastBlockHost: String? = null
     private var lastBlockAt = 0L
+    private val pauseGrace = mutableMapOf<String, java.time.Instant>()
+    val pauseRequestFlow = MutableStateFlow<PauseRequest?>(null)
     private var isReflowRunning: Boolean = false
     private var zoomScale: Float = 0.0F
     private var urlWithSslError: String? = null
@@ -196,6 +213,71 @@ class TabWebViewClient @AssistedInject constructor(
         return null
     }
 
+    fun takeContinueUrl(): String? {
+        val request = pauseRequestFlow.value ?: return null
+        if (!request.isReady(clock.now())) return null
+        stats.recordPause(wentBack = false)
+        pauseGrace[request.site] = PauseRules.graceUntil(clock.now())
+        pauseRequestFlow.value = null
+        return request.url
+    }
+
+    fun leavePause() {
+        if (pauseRequestFlow.value == null) return
+        stats.recordPause(wentBack = true)
+        pauseRequestFlow.value = null
+    }
+
+    private fun handleBlockedAction(view: WebView, uri: Uri): Boolean {
+        if (uri.scheme != BlockedPage.SCHEME) return false
+        when (uri.toString()) {
+            BlockedPage.BACK -> {
+                if (view.canGoBack()) view.goBack() else goHome(view)
+            }
+            BlockedPage.LATER -> {
+                val url = currentUrl.takeIf { it.startsWith("http") } ?: view.url.orEmpty()
+                if (Feature.READ_LATER.isUnlocked) {
+                    readLater.add(url, view.title.orEmpty())
+                }
+                if (view.canGoBack()) view.goBack() else goHome(view)
+            }
+            BlockedPage.HOME -> goHome(view)
+            BlockedPage.DISMISS_MILESTONE -> {
+                stats.dismissMilestoneNotice()
+                goHome(view)
+            }
+            else -> return false
+        }
+        return true
+    }
+
+    private fun goHome(view: WebView) {
+        tabCoroutineScope.launch {
+            val page = homePageFactory.buildPage()
+            view.loadUrl(page)
+        }
+    }
+
+    private fun pauseIfNeeded(view: WebView, uri: Uri): Boolean {
+        if (!Feature.MINDFUL_PAUSE.isUnlocked) return false
+        val host = uri.host ?: return false
+        val site = pauseList.site(host) ?: return false
+        val now = clock.now()
+        if (PauseRules.inGrace(pauseGrace[site], now)) return false
+        pauseGrace.remove(site)
+        val earlier = stats.pausesToday(site)
+        stats.recordPauseShown(site)
+        pauseRequestFlow.value = PauseRequest(
+            url = uri.toString(),
+            site = site,
+            delaySeconds = PauseRules.delay(earlier),
+            shownAt = now,
+        )
+        view.stopLoading()
+        tabCoroutineScope.launch { urlSharedFlow.emit(uri.toString()) }
+        return true
+    }
+
     /** Replaces a page that already committed on a blocked host. */
     private fun replaceCommitted(view: WebView, url: String): Boolean {
         val uri = Uri.parse(url)
@@ -206,6 +288,7 @@ class TabWebViewClient @AssistedInject constructor(
             showBlockedPage(view, listed)
             return true
         }
+        if (pauseIfNeeded(view, uri)) return true
         val token = navigationToken
         val captured = url
         tabCoroutineScope.launch {
@@ -231,18 +314,30 @@ class TabWebViewClient @AssistedInject constructor(
         lastBlockHost = key
         lastBlockAt = now
         logger.log(TAG, "Blocked navigation to $host")
+        pauseRequestFlow.value = null
+        val listed = runBlocking { siteBlocker.await().listedDomain(host) } ?: key
+        stats.recordBlocked(listed)
         suppressedHost = key
         view.stopLoading()
-        // Keep the host in the address bar.
         val pageUrl = "https://$key/"
         view.loadDataWithBaseURL(
             pageUrl,
-            BlockedPage.document(host, darkTheme),
+            blockedDocument(host, listed),
             "text/html",
             "utf-8",
             pageUrl
         )
     }
+
+    private fun blockedDocument(host: String, listed: String): String =
+        BlockedPage.document(
+            host = host,
+            darkTheme = darkTheme,
+            attempts = stats.blockedToday(listed),
+            site = listed,
+            note = if (Feature.BLOCKED_PAGE_NOTE.isUnlocked) focusCoordinator.blockedNote else "",
+            showReadLater = Feature.READ_LATER.isUnlocked,
+        )
 
     override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
         navigationToken++
@@ -253,10 +348,8 @@ class TabWebViewClient @AssistedInject constructor(
             suppressedHost = null
         } else if (scheme == "http" || scheme == "https") {
             suppressedHost = null
-            // Listed hosts are already replaced. Asking again here blanks the tab.
-            // Unknown hosts go to DNS, off this thread.
             val listed = blockedHost(uri, consultResolver = false)
-            if (listed == null) {
+            if (listed == null && !pauseIfNeeded(view, uri)) {
                 val captured = url
                 val token = navigationToken
                 tabCoroutineScope.launch {
@@ -436,13 +529,13 @@ class TabWebViewClient @AssistedInject constructor(
     }
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-        // A blocked hop stays in this browser. Handing it to another app would walk around the list.
-        // Local list only. A DNS lookup here runs on the main thread and fails open.
+        if (handleBlockedAction(view, request.url)) return true
         val blocked = blockedHost(request.url, consultResolver = false)
         if (blocked != null) {
             showBlockedPage(view, blocked)
             return true
         }
+        if (request.isForMainFrame && pauseIfNeeded(view, request.url)) return true
         return urlHandler.shouldOverrideLoading(
             tabSettings.openAvailableAppsEnabled,
             view,
@@ -463,12 +556,32 @@ class TabWebViewClient @AssistedInject constructor(
             null
         }
         if (blockedHost != null) {
-            // Before the ad blocker. This list has no preference and no per-site exception.
             return if (request.isForMainFrame) {
                 logger.log(TAG, "Blocked page load for $blockedHost")
-                BlockedPage.forHost(blockedHost, darkTheme)
+                val listed = runBlocking { siteBlocker.await().listedDomain(blockedHost) } ?: blockedHost
+                val key = blockedHost.lowercase()
+                val now = android.os.SystemClock.uptimeMillis()
+                if (lastBlockHost != key || now - lastBlockAt >= BLOCK_DEBOUNCE_MS) {
+                    lastBlockHost = key
+                    lastBlockAt = now
+                    stats.recordBlocked(listed)
+                }
+                BlockedPage.forHost(
+                    host = blockedHost,
+                    darkTheme = darkTheme,
+                    attempts = stats.blockedToday(listed),
+                    site = listed,
+                    note = if (Feature.BLOCKED_PAGE_NOTE.isUnlocked) focusCoordinator.blockedNote else "",
+                    showReadLater = Feature.READ_LATER.isUnlocked,
+                )
             } else {
                 BlockedPage.emptyResource()
+            }
+        }
+        if (request.isForMainFrame && Feature.MINDFUL_PAUSE.isUnlocked) {
+            val site = pauseList.site(request.url.host)
+            if (site != null && !PauseRules.inGrace(pauseGrace[site], clock.now())) {
+                return BlockedPage.emptyResource()
             }
         }
         if (shouldBlockRequest(currentUrl, request.url)) {

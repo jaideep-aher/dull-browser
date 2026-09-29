@@ -36,7 +36,13 @@ class SettingsScreenStateProvider @Inject constructor(
         SettingsNavigation.PRIVACY -> privacySettingsScreen.createSettingsFrameworkState()
         SettingsNavigation.ADVANCED -> advancedSettingsScreen.createSettingsFrameworkState()
         SettingsNavigation.ABOUT -> aboutSettingsScreen.createSettingsFrameworkState()
-        SettingsNavigation.LICENSES -> error("Unsupported")
+        SettingsNavigation.LICENSES,
+        SettingsNavigation.PAUSE,
+        SettingsNavigation.ADDED_SITES,
+        SettingsNavigation.COUNTDOWNS,
+        SettingsNavigation.STATS,
+        SettingsNavigation.READ_LATER,
+        SettingsNavigation.PASSWORDS -> error("Unsupported")
         SettingsNavigation.DEBUG -> debugSettingsScreen.createSettingsFrameworkState()
     }
 }

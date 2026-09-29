@@ -16,10 +16,14 @@ import com.github.jaideepaher.slatebrowser.constant.DESKTOP_USER_AGENT
 import com.github.jaideepaher.slatebrowser.download.PendingDownload
 import com.github.jaideepaher.slatebrowser.ids.ViewIdGenerator
 import com.github.jaideepaher.slatebrowser.pool.ObjectPool
+import com.github.jaideepaher.slatebrowser.focus.PauseRequest
+import com.github.jaideepaher.slatebrowser.focus.TabThumbnails
+import com.github.jaideepaher.slatebrowser.html.homepage.HomePageFactory
 import com.github.jaideepaher.slatebrowser.preview.PreviewModel
 import com.github.jaideepaher.slatebrowser.ssl.SslCertificateInfo
 import com.github.jaideepaher.slatebrowser.ssl.SslState
 import com.github.jaideepaher.slatebrowser.useragent.UserAgentProvider
+import com.github.jaideepaher.slatebrowser.utils.isSpecialUrl
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -78,6 +82,8 @@ class TabAdapter @AssistedInject constructor(
     private val coroutineDispatchers: CoroutineDispatchers,
     private val connectivityProvider: ConnectivityProvider,
     private val siteBlocker: Deferred<@JvmSuppressWildcards SiteBlocker>,
+    private val homePageFactory: HomePageFactory,
+    private val tabThumbnails: TabThumbnails,
 ) : TabModel {
 
     @AssistedFactory
@@ -431,6 +437,22 @@ class TabAdapter @AssistedInject constructor(
     override fun focusRequests(): Flow<Unit> = focusSharedFlow
     override fun showHideToolbar(): Flow<Boolean> = showHideFlow
 
+    override fun pauseChanges(): StateFlow<PauseRequest?> = tabWebViewClient.pauseRequestFlow
+
+    override suspend fun continuePause() {
+        val url = tabWebViewClient.takeContinueUrl() ?: return
+        webView().loadUrl(url, requestHeaders)
+    }
+
+    override suspend fun leavePause() {
+        tabWebViewClient.leavePause()
+        if (webView().canGoBack()) {
+            webView().goBack()
+        } else {
+            webView().loadUrl(homePageFactory.buildPage())
+        }
+    }
+
     override suspend fun foreground() {
         priority = Priority.HIGH
         webView().resumeTimers()
@@ -443,11 +465,13 @@ class TabAdapter @AssistedInject constructor(
 
     override suspend fun background(backgroundAll: Boolean) {
         priority = Priority.LOW
-        webViewIfInitialized()?.apply {
-            onPause()
-            settings.offscreenPreRaster = false
+        webViewIfInitialized()?.let { view ->
+            val capturable = url.isNotBlank() && !url.isSpecialUrl()
+            tabThumbnails.capture(view, id, capturable)
+            view.onPause()
+            view.settings.offscreenPreRaster = false
             if (backgroundAll) {
-                pauseTimers()
+                view.pauseTimers()
             }
         }
     }
@@ -470,6 +494,7 @@ class TabAdapter @AssistedInject constructor(
     override suspend fun destroy() {
         viewIdGenerator.releaseViewId(id)
         previewModel.prune()
+        tabThumbnails.remove(id)
         freeze()
         tabCoroutineScope.cancel()
         _acquiredWebView?.let { webViewPool.release(it) }

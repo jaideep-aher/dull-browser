@@ -12,6 +12,8 @@
     <string name="action_bookmarks">Bookmarks</string>
     <string name="action_downloads">Downloads</string>
     <string name="action_add_bookmark">Add bookmark</string>
+    <string name="action_save_for_later">Save for later</string>
+    <string name="message_saved_for_later">Saved for later</string>
     <string name="action_copy">Copy link</string>
     <string name="action_forward">Forward</string>
     <string name="settings">Settings</string>
@@ -359,6 +361,15 @@
     <!-- Site blocking -->
     <string name="site_blocking">Site blocking</string>
     <string name="site_blocking_summary">Always on · %1$s domains closed</string>
+    <string name="settings_blocked_note">Blocked page note</string>
+    <string name="settings_blocked_note_hint">A line on the closed page, like why you installed Dull</string>
+    <string name="settings_pause">Pause before sites</string>
+    <string name="settings_countdowns">Countdowns</string>
+    <string name="settings_stats">Stats</string>
+    <string name="settings_read_later">Read later</string>
+    <string name="settings_passwords">Passwords</string>
+    <string name="settings_passwords_summary">Saved in Autofill, never in Dull</string>
+    <string name="settings_quick_links">Quick links on the start page</string>
 
     <!-- Privacy -->
     <string name="clear_all_browsing_data">Clear all browsing data</string>

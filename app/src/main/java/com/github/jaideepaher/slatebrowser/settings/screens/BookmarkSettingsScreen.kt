@@ -3,9 +3,11 @@ package com.github.jaideepaher.slatebrowser.settings.screens
 import com.github.jaideepaher.slatebrowser.R
 import com.github.jaideepaher.slatebrowser.database.bookmark.BookmarkExporter
 import com.github.jaideepaher.slatebrowser.database.bookmark.BookmarkRepository
+import com.github.jaideepaher.slatebrowser.focus.Bookmarks
 import com.github.jaideepaher.slatebrowser.resources.ResourceProvider
 import com.github.jaideepaher.slatebrowser.settings.framework.ClickableOnClick
 import com.github.jaideepaher.slatebrowser.settings.framework.ClickableState
+import com.github.jaideepaher.slatebrowser.settings.framework.SettingsBottomSheetChooserState
 import com.github.jaideepaher.slatebrowser.settings.framework.SettingsDialogConfirmationState
 import com.github.jaideepaher.slatebrowser.settings.framework.SettingsFrameworkState
 import com.github.jaideepaher.slatebrowser.settings.framework.SettingsSnackBarState
@@ -15,10 +17,29 @@ class BookmarkSettingsScreen @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val bookmarkExporter: BookmarkExporter,
     private val bookmarkRepository: BookmarkRepository,
+    private val focusBookmarks: Bookmarks,
 ) {
     fun createSettingsFrameworkState(): SettingsFrameworkState = SettingsFrameworkState(
         title = resourceProvider.stringResource(R.string.bookmark_settings),
         content = listOf(
+            ClickableState(
+                title = resourceProvider.stringResource(R.string.settings_quick_links),
+                summary = { focusBookmarks.quickLinkCount.toString() },
+                onClick = ClickableOnClick.ItemSelector(
+                    produceState = {
+                        SettingsBottomSheetChooserState(
+                            title = resourceProvider.stringResource(R.string.settings_quick_links),
+                            values = (0..Bookmarks.MAX_QUICK_LINKS).map { it.toString() },
+                            selected = focusBookmarks.quickLinkCount,
+                        )
+                    },
+                    onSelected = { count ->
+                        ClickableOnClick.Action {
+                            focusBookmarks.quickLinkCount = count
+                        }
+                    }
+                )
+            ),
             ClickableState(
                 title = resourceProvider.stringResource(R.string.export_bookmarks),
                 onClick = ClickableOnClick.FileCreator(

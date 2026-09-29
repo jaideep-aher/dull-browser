@@ -71,6 +71,7 @@ class WebViewFactory @Inject constructor(
         setBackgroundColor(if (tabSettings.darkTheme) DARK_BACKGROUND else Color.WHITE)
 
         importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_YES
+        enableWebAuthnIfSupported(settings)
 
         isScrollbarFadingEnabled = true
         isSaveEnabled = true
@@ -165,6 +166,16 @@ class WebViewFactory @Inject constructor(
             this,
             !tabSettings.blockThirdPartyCookiesEnabled
         )
+    }
+
+    private fun enableWebAuthnIfSupported(settings: WebSettings) {
+        if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_AUTHENTICATION)) return
+        runCatching {
+            WebSettingsCompat.setWebAuthenticationSupport(
+                settings,
+                WebSettingsCompat.WEB_AUTHENTICATION_SUPPORT_FOR_BROWSER
+            )
+        }
     }
 
     private fun WebView.setColorMode(paint: Paint, mode: RenderingMode) {

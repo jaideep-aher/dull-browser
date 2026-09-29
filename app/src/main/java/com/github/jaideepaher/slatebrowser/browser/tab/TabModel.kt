@@ -1,6 +1,7 @@
 package com.github.jaideepaher.slatebrowser.browser.tab
 
 import com.github.jaideepaher.slatebrowser.download.PendingDownload
+import com.github.jaideepaher.slatebrowser.focus.PauseRequest
 import com.github.jaideepaher.slatebrowser.ssl.SslCertificateInfo
 import com.github.jaideepaher.slatebrowser.ssl.SslState
 import android.content.Intent
@@ -261,6 +262,21 @@ interface TabModel {
      * toolbar shown, false if it wants it hidden.
      */
     fun showHideToolbar(): Flow<Boolean>
+
+    /**
+     * The pause shown in front of this tab, if any.
+     */
+    fun pauseChanges(): StateFlow<PauseRequest?>
+
+    /**
+     * Continue past a finished pause countdown.
+     */
+    suspend fun continuePause()
+
+    /**
+     * Leave a pause without opening the site.
+     */
+    suspend fun leavePause()
 
     /**
      * Move the tab to the foreground.

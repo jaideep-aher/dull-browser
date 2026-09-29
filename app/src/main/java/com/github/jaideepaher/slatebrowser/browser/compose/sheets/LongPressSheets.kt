@@ -73,6 +73,18 @@ fun LongPressLinkSheet(
             },
             DialogItem(title = R.string.dialog_copy_link) {
                 onClick(BrowserContract.LinkLongPressEvent.COPY_LINK)
+            },
+            DialogItem(
+                title = R.string.action_save_for_later,
+                isConditionMet = !browserViewState.isIncognito
+            ) {
+                onClick(BrowserContract.LinkLongPressEvent.SAVE_FOR_LATER)
+            },
+            DialogItem(
+                title = R.string.action_add_bookmark,
+                isConditionMet = !browserViewState.isIncognito
+            ) {
+                onClick(BrowserContract.LinkLongPressEvent.ADD_BOOKMARK)
             }
         ),
         presenter = presenter
