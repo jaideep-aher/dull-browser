@@ -1,5 +1,6 @@
 package com.github.jaideepaher.slatebrowser.adblock.siteblock
 
+import com.github.jaideepaher.slatebrowser.focus.CustomBlocklist
 import com.github.jaideepaher.slatebrowser.log.Logger
 import android.app.Application
 import android.net.Uri
@@ -11,13 +12,15 @@ import javax.inject.Singleton
  *
  * This is deliberately separate from [com.github.jaideepaher.slatebrowser.adblock.AdBlocker]. The ad blocker is
  * something the user turns on and off and can allow-list per site; this one has no preference, no
- * allow list and no way to refresh from the network. The only way to change what it blocks is to
- * edit `tools/extra-domains.txt`, regenerate the asset and build a new APK.
+ * allow list and no way to refresh from the network. The packaged list only changes with a new APK
+ * (edit `tools/extra-domains.txt` and regenerate the asset). The person can add sites of their own
+ * through [CustomBlocklist], which only grows.
  */
 @Singleton
 class SiteBlocker @Inject constructor(
     application: Application,
     private val dohSiteFilter: DohSiteFilter,
+    private val customBlocklist: CustomBlocklist,
     logger: Logger
 ) {
 
@@ -56,9 +59,26 @@ class SiteBlocker @Inject constructor(
      */
     fun isBlocked(uri: Uri, consultResolver: Boolean = false): Boolean {
         val host = uri.host?.lowercase()?.trimEnd('.')?.takeIf { it.isNotEmpty() } ?: return false
-        if (matcher.matches(host)) return true
+        if (isListed(host)) return true
         return consultResolver && dohSiteFilter.isFiltered(host)
     }
+
+    /**
+     * True if [host] is on the packaged list or on the sites the person added.
+     */
+    fun isListed(host: String): Boolean = listedDomain(host) != null
+
+    /**
+     * The list entry that closes [host], such as "youtube.com" for "m.youtube.com".
+     */
+    fun listedDomain(host: String): String? =
+        matcher.match(host) ?: customBlocklist.match(host)
+
+    /**
+     * Blocks another site for good. There is no matching remove.
+     */
+    fun addCustom(input: String): CustomBlocklist.AddResult =
+        customBlocklist.add(input) { matcher.matches(it) }
 
     companion object {
         private const val TAG = "SiteBlocker"
