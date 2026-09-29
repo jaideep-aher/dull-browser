@@ -8,17 +8,14 @@ See the [feature roadmap](docs/FEATURE_ROADMAP.md) for planned work.
 
 ## Branches and releases
 
-This repository is a monorepo: the Android app lives at the root (`app/` and the Gradle files) and the iOS app lives in `ios/`. Platforms are folders, not long-lived branches.
+This repository is a monorepo: the Android app lives at the root (`app/` and the Gradle files) and the iOS app lives in `ios/`. The only long-lived branches are **`main`**, **`ios`**, and **`android`**. Do not create extra feature branches.
 
-- **`main` is the trunk.** It is the default branch and the source for every release on both platforms. Never force-push it.
-- **Work on short-lived branches** created from `main`, named with a platform prefix:
-  - `android/...` for Android changes, for example `android/study-sessions`
-  - `ios/...` for iOS changes, for example `ios/lockdown-guide`
-  - `docs/...` for documentation, for example `docs/feature-roadmap`
-  - `shared/...` for changes to the blocklist, tools or both apps at once
-- **Open a pull request into `main`** for every change, and merge once checks pass. Delete the branch after merging unless it is kept on purpose.
+- **`main` is the trunk.** It is the default branch and the source for every release. Never force-push it.
+- **`ios` is for iOS work.** Commit iOS changes here, then merge `ios` into `main`.
+- **`android` is for Android work.** Commit Android changes here, then merge `android` into `main`.
+- Shared docs, the blocklist, and tooling go on `main`, or land on `main` when the platform branches are merged.
+- After a merge, fast-forward `ios` and `android` to `main` so the three branches stay aligned. Do not leave old feature branches around.
 - **Tag releases per platform** on the `main` commit that was shipped, for example `android-v1.1.0` and `ios-v1.1.0`.
-- **The legacy `ios` branch** is kept for history only. The iOS app now lives in `ios/` on `main`; do not base new work on the `ios` branch.
 
 Before opening a pull request, run the checks for the platform you changed:
 

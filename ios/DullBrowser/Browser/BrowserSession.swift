@@ -39,10 +39,23 @@ final class BrowserSession: ObservableObject {
         activeTab.restoreIfNeeded()
     }
 
+    private var thumbnails: TabThumbnails { .shared }
+
+    /// Drops saved previews of tabs that no longer exist, such as after starting fresh.
+    func pruneThumbnails() {
+        thumbnails.removeAll(keeping: Set(tabs.map(\.id)))
+    }
+
     var activeTab: BrowserModel { tabs.first(where: { $0.id == selectedID }) ?? tabs[0] }
 
-    func addTab(url: URL? = nil) {
+    /// Leaving a tab is the only time its preview is taken.
+    func leaveActiveTab() {
+        thumbnails.capture(activeTab)
         activeTab.deactivate()
+    }
+
+    func addTab(url: URL? = nil) {
+        leaveActiveTab()
         let tab = BrowserModel()
         tabs.append(tab)
         selectedID = tab.id
@@ -53,7 +66,7 @@ final class BrowserSession: ObservableObject {
 
     func select(_ id: UUID) {
         guard tabs.contains(where: { $0.id == id }) else { return }
-        activeTab.deactivate()
+        if id != selectedID { leaveActiveTab() }
         selectedID = id
         activeTab.restoreIfNeeded()
         save()
@@ -62,6 +75,7 @@ final class BrowserSession: ObservableObject {
     func close(_ id: UUID) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         tabs[index].close()
+        thumbnails.remove(id)
         tabs.remove(at: index)
         if tabs.isEmpty {
             let replacement = BrowserModel()
@@ -79,6 +93,7 @@ final class BrowserSession: ObservableObject {
     func clearBrowsingData(in store: WKWebsiteDataStore? = nil) async {
         let store = store ?? .default()
         tabs.forEach { $0.close() }
+        thumbnails.removeAll()
         let replacement = BrowserModel()
         tabs = [replacement]
         selectedID = replacement.id
@@ -97,7 +112,7 @@ final class BrowserSession: ObservableObject {
         for tab in tabs {
             tab.openInNewTab = { [weak self] url in self?.addTab(url: url) }
             // Published properties notify before mutation; persist after the update has landed.
-            tab.$url.combineLatest(tab.$blockedHost, tab.$showingNewTab)
+            tab.$url.combineLatest(tab.$blockedHost, tab.$showingNewTab, tab.$pause.map { $0 != nil })
                 .dropFirst().receive(on: RunLoop.main).sink { [weak self] _ in
                 self?.save()
             }.store(in: &observers)
