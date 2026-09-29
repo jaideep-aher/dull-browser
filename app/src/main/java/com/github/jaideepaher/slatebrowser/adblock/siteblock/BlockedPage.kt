@@ -1,42 +1,47 @@
 package com.github.jaideepaher.slatebrowser.adblock.siteblock
 
+import com.github.jaideepaher.slatebrowser.focus.SiteName
 import android.webkit.WebResourceResponse
 import java.io.ByteArrayInputStream
 
 /**
  * The page shown in place of a blocked site.
  *
- * Intentionally a dead end: no "continue anyway" link, no settings shortcut, nothing to tap.
+ * Intentionally a dead end: no "continue anyway" link. The actions only go somewhere else,
+ * through the `dull://blocked/` scheme handled by the tab client.
  */
 object BlockedPage {
+
+    const val SCHEME = "dull"
+    const val BACK = "dull://blocked/back"
+    const val LATER = "dull://blocked/later"
+    const val HOME = "dull://blocked/home"
+    const val DISMISS_MILESTONE = "dull://focus/dismiss-milestone"
 
     private const val MIME_TYPE = "text/html"
     private const val ENCODING = "utf-8"
 
     private val EMPTY_RESPONSE_BYTES = ByteArray(0)
 
-    /**
-     * A blank response, used for blocked sub-resources where a visible page would make no sense.
-     */
     fun emptyResource(): WebResourceResponse = WebResourceResponse(
         MIME_TYPE,
         ENCODING,
         ByteArrayInputStream(EMPTY_RESPONSE_BYTES)
     ).asSuccess()
 
-    /**
-     * The full page shown when a blocked site is opened in the address bar.
-     */
-    fun forHost(host: String, darkTheme: Boolean = false): WebResourceResponse = WebResourceResponse(
+    fun forHost(
+        host: String,
+        darkTheme: Boolean = false,
+        attempts: Int = 0,
+        site: String? = null,
+        note: String = "",
+        showReadLater: Boolean = true,
+    ): WebResourceResponse = WebResourceResponse(
         MIME_TYPE,
         ENCODING,
-        ByteArrayInputStream(document(host, darkTheme).toByteArray())
+        ByteArrayInputStream(document(host, darkTheme, attempts, site, note, showReadLater).toByteArray())
     ).asSuccess()
 
-    /**
-     * WebView drops a main-frame interception whose status code was left unset and then loads the
-     * real site. 200 makes the replacement stick.
-     */
     private fun WebResourceResponse.asSuccess(): WebResourceResponse = apply {
         setStatusCodeAndReasonPhrase(200, "OK")
         if (responseHeaders == null) {
@@ -44,14 +49,33 @@ object BlockedPage {
         }
     }
 
-    /**
-     * Same mark as the launcher icon, one sentence, and the domain, in the app's light or dark
-     * palette.
-     */
-    fun document(host: String, darkTheme: Boolean = false): String {
+    fun document(
+        host: String,
+        darkTheme: Boolean = false,
+        attempts: Int = 0,
+        site: String? = null,
+        note: String = "",
+        showReadLater: Boolean = true,
+    ): String {
         val background = if (darkTheme) "#202124" else "#FFFFFF"
         val foreground = if (darkTheme) "#E8EAED" else "#202124"
         val muted = if (darkTheme) "#9AA0A6" else "#5F6368"
+        val attemptsLine = when {
+            site == null || attempts <= 0 -> ""
+            attempts == 1 -> "<p class=\"attempts\">You tried ${SiteName.display(site).escapeHtml()} once today.</p>"
+            else -> "<p class=\"attempts\">You tried ${SiteName.display(site).escapeHtml()} $attempts times today.</p>"
+        }
+        val trimmed = note.trim()
+        val noteLine = if (trimmed.isEmpty()) {
+            ""
+        } else {
+            "<p class=\"note\">${trimmed.escapeHtml()}</p>"
+        }
+        val later = if (showReadLater) {
+            """<a href="$LATER">Read later</a>"""
+        } else {
+            ""
+        }
         return """
         <!DOCTYPE html>
         <html>
@@ -85,6 +109,34 @@ object BlockedPage {
               color: $muted;
               word-break: break-all;
             }
+            .attempts {
+              margin-top: 20px;
+              font-size: 15px;
+              color: $muted;
+            }
+            .note {
+              margin-top: 24px;
+              font-size: 16px;
+              font-style: italic;
+              font-family: serif;
+            }
+            nav {
+              margin-top: 36px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              justify-content: center;
+            }
+            a {
+              font-size: 15px;
+              color: $foreground;
+              text-decoration: none;
+              padding: 0 14px;
+              height: 38px;
+              line-height: 38px;
+              border: 1px solid ${if (darkTheme) "#5F6368" else "#2021244D"};
+              border-radius: 19px;
+            }
           </style>
         </head>
         <body>
@@ -95,6 +147,13 @@ object BlockedPage {
             </svg>
             <p>This site stays closed in Dull Browser.</p>
             <p class="host">${host.escapeHtml()}</p>
+            $attemptsLine
+            $noteLine
+            <nav>
+              <a href="$BACK">Go back</a>
+              $later
+              <a href="$HOME">Start page</a>
+            </nav>
           </main>
         </body>
         </html>

@@ -14,6 +14,7 @@ enum class MenuSelection {
     ADD_TO_HOME,
     BOOKMARKS,
     ADD_BOOKMARK,
+    SAVE_FOR_LATER,
     SETTINGS,
     BACK,
     FORWARD

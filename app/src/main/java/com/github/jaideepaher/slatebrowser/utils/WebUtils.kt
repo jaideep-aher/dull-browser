@@ -5,6 +5,7 @@ import com.github.jaideepaher.slatebrowser.database.history.HistoryRepository
 import com.github.jaideepaher.slatebrowser.di.FaviconCacheDir
 import com.github.jaideepaher.slatebrowser.di.GeneratedHtmlDir
 import com.github.jaideepaher.slatebrowser.di.PreviewCacheDir
+import com.github.jaideepaher.slatebrowser.focus.TabThumbnails
 import android.app.Activity
 import android.app.Application
 import android.webkit.CookieManager
@@ -22,6 +23,7 @@ class WebUtils @Inject constructor(
     @FaviconCacheDir private val faviconCacheDirThreadSafeFileProvider: ThreadSafeFileProvider,
     @PreviewCacheDir private val previewCacheDirThreadSafeFileProvider: ThreadSafeFileProvider,
     @GeneratedHtmlDir private val generatedHtmlDirThreadSafeFileProvider: ThreadSafeFileProvider,
+    private val tabThumbnails: TabThumbnails,
 ) {
     suspend fun clearCookies() = withContext(coroutineDispatchers.io) {
         CookieManager.getInstance().removeAllCookies(null)
@@ -38,6 +40,7 @@ class WebUtils @Inject constructor(
         faviconCacheDirThreadSafeFileProvider.file().deleteRecursively()
         previewCacheDirThreadSafeFileProvider.file().deleteRecursively()
         generatedHtmlDirThreadSafeFileProvider.file().deleteRecursively()
+        tabThumbnails.removeAll()
     }
 
     suspend fun clearCache() = withContext(coroutineDispatchers.io) {
@@ -48,5 +51,6 @@ class WebUtils @Inject constructor(
         }
         faviconCacheDirThreadSafeFileProvider.file().deleteRecursively()
         previewCacheDirThreadSafeFileProvider.file().deleteRecursively()
+        tabThumbnails.removeAll()
     }
 }

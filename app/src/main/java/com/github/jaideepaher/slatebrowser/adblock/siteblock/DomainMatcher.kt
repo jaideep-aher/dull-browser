@@ -11,18 +11,23 @@ class DomainMatcher(private val domains: Set<String>) {
     /**
      * Returns true if [host] or any of its parent domains is blocked.
      */
-    fun matches(host: String): Boolean {
+    fun matches(host: String): Boolean = match(host) != null
+
+    /**
+     * The listed domain that covers [host], or null if none does.
+     */
+    fun match(host: String): String? {
         val normalized = host.lowercase().trimEnd('.')
-        if (normalized.isEmpty()) return false
+        if (normalized.isEmpty()) return null
 
         var index = 0
         while (index < normalized.length) {
             val candidate = normalized.substring(index)
             // Stop before the final label: a stray "com" in the list must not block the web.
-            if (!candidate.contains('.')) return false
-            if (candidate in domains) return true
+            if (!candidate.contains('.')) return null
+            if (candidate in domains) return candidate
             index = normalized.indexOf('.', index) + 1
         }
-        return false
+        return null
     }
 }

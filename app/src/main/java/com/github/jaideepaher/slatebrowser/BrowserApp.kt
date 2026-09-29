@@ -8,6 +8,7 @@ import com.github.jaideepaher.slatebrowser.device.BuildType
 import com.github.jaideepaher.slatebrowser.di.AppComponent
 import com.github.jaideepaher.slatebrowser.di.DaggerAppComponent
 import com.github.jaideepaher.slatebrowser.di.injector
+import com.github.jaideepaher.slatebrowser.focus.FocusCoordinator
 import com.github.jaideepaher.slatebrowser.migration.Cleanup
 import com.github.jaideepaher.slatebrowser.utils.FileUtils
 import com.github.jaideepaher.slatebrowser.utils.LeakCanaryUtils
@@ -42,6 +43,9 @@ class BrowserApp : Application() {
 
     @Inject
     internal lateinit var bookmarkExporter: BookmarkExporter
+
+    @Inject
+    internal lateinit var focusCoordinator: FocusCoordinator
 
     lateinit var applicationComponent: AppComponent
 
@@ -89,6 +93,7 @@ class BrowserApp : Application() {
             .incognitoMode(isIncognito)
             .build()
         injector.inject(this)
+        focusCoordinator.becomeActive()
 
         appCoroutineScope.launch {
             cleanup.cleanup()

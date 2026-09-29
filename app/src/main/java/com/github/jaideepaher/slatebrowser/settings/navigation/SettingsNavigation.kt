@@ -13,5 +13,11 @@ enum class SettingsNavigation(val parent: SettingsNavigation?) {
     ADVANCED(ROOT),
     ABOUT(ROOT),
     LICENSES(ABOUT),
-    DEBUG(ROOT)
+    DEBUG(ROOT),
+    PAUSE(ROOT),
+    ADDED_SITES(ROOT),
+    COUNTDOWNS(ROOT),
+    STATS(ROOT),
+    READ_LATER(ROOT),
+    PASSWORDS(ROOT),
 }

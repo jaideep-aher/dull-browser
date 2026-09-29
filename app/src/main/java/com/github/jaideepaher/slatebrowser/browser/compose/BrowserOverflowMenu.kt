@@ -127,6 +127,13 @@ fun BrowserOverflowMenu(presenter: BrowserPresenter, browserViewState: BrowserCo
                         dropDownExpanded = false
                     }
                 )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.action_save_for_later)) },
+                    onClick = {
+                        presenter.onEvent(BrowserUiEvent.MenuClick(MenuSelection.SAVE_FOR_LATER))
+                        dropDownExpanded = false
+                    }
+                )
             }
             if (!browserViewState.isIncognito) {
                 DropdownMenuItem(

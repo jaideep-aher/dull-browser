@@ -14,6 +14,10 @@ import com.github.jaideepaher.slatebrowser.html.jsoup.parse
 import com.github.jaideepaher.slatebrowser.html.jsoup.style
 import com.github.jaideepaher.slatebrowser.html.jsoup.tag
 import com.github.jaideepaher.slatebrowser.html.jsoup.title
+import com.github.jaideepaher.slatebrowser.focus.Bookmarks
+import com.github.jaideepaher.slatebrowser.focus.Countdowns
+import com.github.jaideepaher.slatebrowser.focus.Feature
+import com.github.jaideepaher.slatebrowser.focus.Stats
 import com.github.jaideepaher.slatebrowser.preference.UserPreferencesDataStore
 import com.github.jaideepaher.slatebrowser.search.SearchEngineProvider
 import com.github.jaideepaher.slatebrowser.theme.ThemeProvider
@@ -35,6 +39,9 @@ class HomePageFactory @Inject constructor(
     private val userPreferencesDataStore: UserPreferencesDataStore,
     private val coroutineDispatchers: CoroutineDispatchers,
     @GeneratedHtmlDir private val generatedHtmlDir: ThreadSafeFileProvider,
+    private val countdowns: Countdowns,
+    private val bookmarks: Bookmarks,
+    private val stats: Stats,
 ) : HtmlPageFactory {
 
     private val title = application.getString(R.string.home)
@@ -80,6 +87,9 @@ class HomePageFactory @Inject constructor(
                             .replace($$"${BASE_URL}", queryUrl)
                             .replace($$"${CLOCK}", clock)
                             .replace($$"${SEARCH_HINT}", searchHint.replace("\"", "\\\""))
+                            .replace($$"${COUNTDOWN}", countdownLabel().replace("\"", "\\\""))
+                            .replace($$"${MILESTONE}", milestoneLabel())
+                            .replace($$"${QUICK_LINKS}", quickLinksJson())
                             .replace("&", "\\u0026")
                     )
                 }
@@ -101,6 +111,24 @@ class HomePageFactory @Inject constructor(
         generatedHtml.mkdirs()
         return File(generatedHtml, FILENAME)
     }
+
+    private fun countdownLabel(): String =
+        if (Feature.COUNTDOWNS.isUnlocked) countdowns.nextLabel.orEmpty() else ""
+
+    private fun milestoneLabel(): String {
+        if (!Feature.MILESTONES.isUnlocked) return ""
+        return stats.snapshot.noticeMilestone?.toString().orEmpty()
+    }
+
+    private fun quickLinksJson(): String {
+        if (!Feature.BOOKMARKS.isUnlocked) return "[]"
+        return bookmarks.quickLinks.joinToString(prefix = "[", postfix = "]") { link ->
+            val host = runCatching { java.net.URI(link.url).host }.getOrNull().orEmpty()
+            """{"url":"${link.url.escapeJs()}","title":"${link.title.escapeJs()}","host":"${host.escapeJs()}"}"""
+        }
+    }
+
+    private fun String.escapeJs() = replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ")
 
     companion object {
 

@@ -5,6 +5,7 @@ import com.github.jaideepaher.slatebrowser.browser.compose.BottomTabs
 import com.github.jaideepaher.slatebrowser.browser.compose.CustomView
 import com.github.jaideepaher.slatebrowser.browser.compose.DesktopTabs
 import com.github.jaideepaher.slatebrowser.browser.compose.DrawerTabs
+import com.github.jaideepaher.slatebrowser.browser.compose.PauseOverlay
 import com.github.jaideepaher.slatebrowser.browser.ui.TabConfiguration
 import com.github.jaideepaher.slatebrowser.search.SuggestionsModel
 import android.widget.FrameLayout
@@ -80,6 +81,7 @@ fun BrowserScreen(
             null -> Unit
         }
     }
+    browserViewState.pause?.let { PauseOverlay(it, presenter) }
 }
 
 

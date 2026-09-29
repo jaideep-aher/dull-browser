@@ -207,7 +207,9 @@ interface BrowserContract {
         BACKGROUND_TAB,
         INCOGNITO_TAB,
         SHARE,
-        COPY_LINK
+        COPY_LINK,
+        SAVE_FOR_LATER,
+        ADD_BOOKMARK
     }
 
     /**

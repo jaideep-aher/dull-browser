@@ -329,4 +329,8 @@ sealed interface BrowserUiEvent {
      * Call when the user clicks the action on the snackbar if there is any.
      */
     data object SnackbarActionPerformed : BrowserUiEvent
+
+    data object PauseGoBack : BrowserUiEvent
+
+    data object PauseContinue : BrowserUiEvent
 }

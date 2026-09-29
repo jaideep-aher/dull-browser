@@ -28,6 +28,10 @@ import com.github.jaideepaher.slatebrowser.settings.navigation.DefaultSettingsNa
 import com.github.jaideepaher.slatebrowser.settings.navigation.SettingsNavigator
 import com.github.jaideepaher.slatebrowser.ssl.SessionSslWarningPreferences
 import com.github.jaideepaher.slatebrowser.ssl.SslWarningPreferences
+import com.github.jaideepaher.slatebrowser.focus.FocusClock
+import com.github.jaideepaher.slatebrowser.focus.FocusDataStore
+import com.github.jaideepaher.slatebrowser.focus.KeyValueStore
+import com.github.jaideepaher.slatebrowser.focus.SystemFocusClock
 import com.github.jaideepaher.slatebrowser.theme.DefaultThemeProvider
 import com.github.jaideepaher.slatebrowser.theme.ThemeProvider
 import com.github.jaideepaher.slatebrowser.useragent.DefaultUserAgentProvider
@@ -88,4 +92,10 @@ interface AppBindsModule {
 
     @Binds
     fun bindsDependenciesRepository(defaultDependenciesRepository: DefaultDependenciesRepository): DependenciesRepository
+
+    @Binds
+    fun bindsKeyValueStore(focusDataStore: FocusDataStore): KeyValueStore
+
+    @Binds
+    fun bindsFocusClock(systemFocusClock: SystemFocusClock): FocusClock
 }

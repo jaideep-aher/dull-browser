@@ -104,7 +104,7 @@ Each feature lists:
 - **Android:** Store entries in DataStore (or Room, if the list grows or needs metadata). Merge with the built-in list at lookup time.
 - **iOS:** Store entries in SwiftData or a small JSON file. Recompile and reinstall the `WKContentRuleList` whenever the list changes.
 - **Tier:** Plus
-- **Status:** Exists on iOS, with no removal path at all. Planned on Android.
+- **Status:** Exists on both platforms, with no removal path at all.
 
 ### 1.5 Keyword blocking
 
@@ -120,7 +120,7 @@ Each feature lists:
 - **Android:** Intercept the navigation, show a local interstitial page, and continue to the site only after the countdown finishes.
 - **iOS:** Same flow, rendered with `loadHTMLString` or a native SwiftUI overlay.
 - **Tier:** Free for 1 site, Plus for unlimited sites.
-- **Status:** Exists on iOS (native overlay, category lists and your own sites). Planned on Android. This only applies to sites that are not already blocked; it never offers a way into a blocked site.
+- **Status:** Exists on both platforms (native overlay, category lists and your own sites). This only applies to sites that are not already blocked; it never offers a way into a blocked site.
 
 ### 1.7 Commitment lock
 
@@ -128,7 +128,7 @@ Each feature lists:
 - **Android:** Store pending changes with their due time, apply them with WorkManager, and re-check on app launch in case the job was delayed.
 - **iOS:** Store pending changes with their due time, schedule `BGTaskScheduler` work, and re-check on launch, since background tasks are not guaranteed to run on time.
 - **Tier:** Plus
-- **Status:** Partly exists on iOS: turning off a pause waits 24 hours and is checked at launch. Planned for other changes and on Android.
+- **Status:** Partly exists on both platforms: turning off a pause waits 24 hours and is checked at launch. Planned for other changes.
 
 ## 2. Study and focus
 
@@ -161,7 +161,7 @@ Each feature lists:
 - **Android:** A Glance widget.
 - **iOS:** A WidgetKit widget.
 - **Tier:** Free
-- **Status:** Start page countdown exists on iOS; widgets and Android are planned.
+- **Status:** Start page countdown exists on both platforms; widgets are planned.
 
 ### 2.5 Focus mode filters
 
@@ -187,7 +187,7 @@ Each feature lists:
 - **Android:** Room database.
 - **iOS:** SwiftData.
 - **Tier:** Free
-- **Status:** Blocked attempts and pause outcomes exist on iOS, stored as a small JSON document. Study counts wait for 2.1. Planned on Android.
+- **Status:** Blocked attempts and pause outcomes exist on both platforms, stored as a small JSON document. Study counts wait for 2.1.
 
 ### 3.2 Weekly share card
 
@@ -195,14 +195,14 @@ Each feature lists:
 - **Android:** Render a Compose layout to a `Bitmap`, save it to the cache directory, and share it through a `FileProvider` URI.
 - **iOS:** Render a SwiftUI view with `ImageRenderer` and share it with `ShareLink`.
 - **Tier:** Free
-- **Status:** Exists on iOS. Planned on Android.
+- **Status:** Exists on both platforms.
 
 ### 3.3 Streaks and milestones
 
 - **What it does:** Tracks streaks of days with study sessions or without blocked attempts, and celebrates milestones at 7, 30 and 100 days.
 - **Android and iOS:** Computed from the on-device stats in 3.1.
 - **Tier:** Free
-- **Status:** Exists on iOS, counting days Dull was opened with no pause turned off. Planned on Android.
+- **Status:** Exists on both platforms, counting days Dull was opened with no pause turned off.
 
 ### 3.4 Blocked page with an intent message
 
@@ -210,7 +210,7 @@ Each feature lists:
 - **Android:** `WebView.loadDataWithBaseURL` with a local HTML template.
 - **iOS:** `WKWebView.loadHTMLString` with a local HTML template.
 - **Tier:** Free (default message), Plus (custom message).
-- **Status:** Exists on iOS as a native page with today's attempt count, your own note and ways out. Planned on Android, where a basic blocked message exists today.
+- **Status:** Exists on both platforms with today's attempt count, your own note and ways out. iOS uses a native page; Android uses an HTML page. There is still no continue-anyway.
 
 ### 3.5 Insights history
 
@@ -251,7 +251,7 @@ Each feature lists:
 - **What it does:** Lets the user pin a few chosen sites to the start page. There is deliberately no "most visited" list, which would encourage habit loops.
 - **Android and iOS:** A small stored list shown on the start page.
 - **Tier:** Free for 4 links, Plus for 12.
-- **Status:** Exists on iOS as bookmarks shown on the start page (4 by default, up to 8). Planned on Android.
+- **Status:** Exists on both platforms as bookmarks shown on the start page (4 by default, up to 8).
 
 ### 4.5 Read-later queue
 
@@ -259,7 +259,7 @@ Each feature lists:
 - **Android:** Accept shared links through an `ACTION_SEND` intent filter.
 - **iOS:** A Share Extension that writes to a shared App Group container.
 - **Tier:** Free for 20 items, Plus for unlimited.
-- **Status:** Exists on iOS inside the app, with an optional reading time. The Share Extension and Android are planned.
+- **Status:** Exists on both platforms inside the app, with an optional reading time. Sharing into Dull from other apps is planned.
 
 ### 4.6 Feedless start page
 

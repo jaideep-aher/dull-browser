@@ -3,6 +3,7 @@ package com.github.jaideepaher.slatebrowser.browser
 import com.github.jaideepaher.slatebrowser.browser.BrowserViewState.BookmarkListItem
 import com.github.jaideepaher.slatebrowser.browser.tab.TabViewState
 import com.github.jaideepaher.slatebrowser.browser.view.LongPress
+import com.github.jaideepaher.slatebrowser.focus.PauseRequest
 import com.github.jaideepaher.slatebrowser.database.Bookmark
 import com.github.jaideepaher.slatebrowser.database.HistoryEntry
 import com.github.jaideepaher.slatebrowser.database.downloads.DownloadEntry
@@ -93,6 +94,8 @@ data class BrowserViewState(
     val scrollToTab: Int = -1,
 
     val toolbarVisibility: ToolbarVisibility = ToolbarVisibility.FIXED,
+
+    val pause: PauseRequest? = null,
 ) {
 
     /**
@@ -230,6 +233,8 @@ class BrowserComposeState(
 
     var toolbarVisibility: BrowserViewState.ToolbarVisibility by mutableStateOf(browserViewState.toolbarVisibility)
 
+    var pause: PauseRequest? by mutableStateOf(browserViewState.pause)
+
     fun updateFrom(browserViewState: BrowserViewState) {
         displayUrl = browserViewState.displayUrl
         searchQuery = browserViewState.searchQuery
@@ -257,5 +262,6 @@ class BrowserComposeState(
         showCustomView = browserViewState.showCustomView
         scrollToTab = browserViewState.scrollToTab
         toolbarVisibility = browserViewState.toolbarVisibility
+        pause = browserViewState.pause
     }
 }

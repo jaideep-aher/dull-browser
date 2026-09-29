@@ -35,6 +35,10 @@ import com.github.jaideepaher.slatebrowser.di.BrowserScope
 import com.github.jaideepaher.slatebrowser.di.IncognitoMode
 import com.github.jaideepaher.slatebrowser.download.PendingDownload
 import com.github.jaideepaher.slatebrowser.favicon.FaviconModel
+import com.github.jaideepaher.slatebrowser.focus.Bookmarks
+import com.github.jaideepaher.slatebrowser.focus.CustomBlocklist
+import com.github.jaideepaher.slatebrowser.focus.FocusCoordinator
+import com.github.jaideepaher.slatebrowser.focus.ReadLater
 import com.github.jaideepaher.slatebrowser.html.bookmark.BookmarkPageFactory
 import com.github.jaideepaher.slatebrowser.html.history.HistoryPageFactory
 import com.github.jaideepaher.slatebrowser.preference.UserPreferencesDataStore
@@ -101,6 +105,10 @@ class BrowserPresenter @Inject constructor(
     private val numberFormatter: NumberFormatter,
     private val userPreferencesDataStore: UserPreferencesDataStore,
     private val themeProvider: ThemeProvider,
+    private val focusCoordinator: FocusCoordinator,
+    private val focusBookmarks: Bookmarks,
+    private val readLater: ReadLater,
+    private val customBlocklist: CustomBlocklist,
 ) {
 
     private val browserCoroutineScope = BrowserCoroutineScope(
@@ -190,6 +198,17 @@ class BrowserPresenter @Inject constructor(
                 tabCountNotifier.notifyTabCountChange(list.size)
             }
         }
+
+        browserCoroutineScope.launch {
+            customBlocklist.additions.collect { domain ->
+                model.tabsList.forEach { tab ->
+                    val host = tab.url.toUri().host ?: return@forEach
+                    if (customBlocklist.match(host) == domain) {
+                        tab.loadUrl("https://$host/")
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -214,6 +233,7 @@ class BrowserPresenter @Inject constructor(
      * Call when the view is shown (i.e. the browser is moved to the foreground).
      */
     fun onViewShown() {
+        focusCoordinator.becomeActive()
         browserCoroutineScope.launch {
             currentTab?.foreground()
         }
@@ -235,6 +255,8 @@ class BrowserPresenter @Inject constructor(
     fun onEvent(browserUiEvent: BrowserUiEvent) {
         browserCoroutineScope.launch {
             when (browserUiEvent) {
+                BrowserUiEvent.PauseGoBack -> currentTab?.leavePause()
+                BrowserUiEvent.PauseContinue -> currentTab?.continuePause()
                 BrowserUiEvent.SnackbarActionPerformed -> onSnackbarActionPerformed()
                 BrowserUiEvent.SnackbarDismissed -> onSnackbarDismissed()
                 is BrowserUiEvent.FileChooserResult -> onFileChooserResult(browserUiEvent.activityResult)
@@ -455,6 +477,12 @@ class BrowserPresenter @Inject constructor(
         }.launchIn(browserCoroutineScope)
 
         tabJobs += browserCoroutineScope.launch {
+            tab.pauseChanges().collectLatest { pause ->
+                state.updateSelf { copy(pause = pause) }
+            }
+        }
+
+        tabJobs += browserCoroutineScope.launch {
             tab.downloadRequests().collectLatest {
                 navigator.download(it)
                 showSnackbar(resourceProvider.stringResource(R.string.download_pending))
@@ -649,6 +677,11 @@ class BrowserPresenter @Inject constructor(
             MenuSelection.BOOKMARKS -> state.updateSelf { copy(openBookmarks = true) }
             MenuSelection.ADD_BOOKMARK -> currentTab?.url?.takeIf { !it.isSpecialUrl() }
                 ?.let { showAddBookmarkDialog() }
+
+            MenuSelection.SAVE_FOR_LATER -> currentTab?.url?.takeIf { !it.isSpecialUrl() }?.let { url ->
+                readLater.add(url, currentTab?.title.orEmpty())
+                showSnackbar(resourceProvider.stringResource(R.string.message_saved_for_later))
+            }
 
             MenuSelection.SETTINGS -> navigator.openSettings()
             MenuSelection.BACK -> onBackClick()
@@ -1128,6 +1161,7 @@ class BrowserPresenter @Inject constructor(
 
     private suspend fun onBookmarkConfirmed(title: String, url: String, folder: String) {
         onDialogDismissed()
+        focusBookmarks.add(url, title)
         bookmarkRepository.addBookmarkIfNotExists(
             Bookmark.Entry(
                 url = url,
@@ -1445,6 +1479,13 @@ class BrowserPresenter @Inject constructor(
             BrowserContract.LinkLongPressEvent.SHARE ->
                 longPress.targetUrl?.let { navigator.sharePage(url = it, title = null) }
 
+            BrowserContract.LinkLongPressEvent.SAVE_FOR_LATER ->
+                longPress.targetUrl?.let {
+                    readLater.add(it, it)
+                    showSnackbar(resourceProvider.stringResource(R.string.message_saved_for_later))
+                }
+            BrowserContract.LinkLongPressEvent.ADD_BOOKMARK ->
+                longPress.targetUrl?.let { focusBookmarks.add(it, it) }
             BrowserContract.LinkLongPressEvent.COPY_LINK -> {
                 longPress.targetUrl?.let(navigator::copyPageLink)
                 showSnackbar(resourceProvider.stringResource(R.string.message_link_copied))

@@ -14,6 +14,13 @@ import com.github.jaideepaher.slatebrowser.settings.licenses.LicensesScreen
 import com.github.jaideepaher.slatebrowser.settings.licenses.LicensesScreenPresenter
 import com.github.jaideepaher.slatebrowser.settings.navigation.SettingsNavigation
 import com.github.jaideepaher.slatebrowser.settings.navigation.SettingsNavigator
+import com.github.jaideepaher.slatebrowser.settings.screens.AddedSitesScreen
+import com.github.jaideepaher.slatebrowser.settings.screens.CountdownsScreen
+import com.github.jaideepaher.slatebrowser.settings.screens.FocusSettingsDependencies
+import com.github.jaideepaher.slatebrowser.settings.screens.PasswordsScreen
+import com.github.jaideepaher.slatebrowser.settings.screens.PauseSettingsScreen
+import com.github.jaideepaher.slatebrowser.settings.screens.ReadLaterSettingsScreen
+import com.github.jaideepaher.slatebrowser.settings.screens.StatsSettingsScreen
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -29,6 +36,7 @@ class SettingsActivity : ThemableActivity() {
     @Inject internal lateinit var settingsScreenStateProvider: SettingsScreenStateProvider
     @Inject internal lateinit var licensesScreenPresenterFactory: LicensesScreenPresenter.Factory
     @Inject internal lateinit var settingsNavigator: SettingsNavigator
+    @Inject internal lateinit var focusSettings: FocusSettingsDependencies
 
     override fun onCreate(savedInstanceState: Bundle?) {
         injector.settingsComponentBuilder()
@@ -48,6 +56,37 @@ class SettingsActivity : ThemableActivity() {
                     }
                 }) { state ->
                     when (state) {
+                        SettingsNavigation.PAUSE -> PauseSettingsScreen(
+                            useBlackStatusBarStateFlow,
+                            focusSettings.pauseList,
+                            focusSettings.siteBlocker.get(),
+                        ) { settingsNavigator.navigateTo(SettingsNavigation.ROOT) }
+
+                        SettingsNavigation.ADDED_SITES -> AddedSitesScreen(
+                            useBlackStatusBarStateFlow,
+                            focusSettings.siteBlocker.get(),
+                            focusSettings.focusCoordinator.customBlocklist,
+                        ) { settingsNavigator.navigateTo(SettingsNavigation.ROOT) }
+
+                        SettingsNavigation.COUNTDOWNS -> CountdownsScreen(
+                            useBlackStatusBarStateFlow,
+                            focusSettings.countdowns,
+                        ) { settingsNavigator.navigateTo(SettingsNavigation.ROOT) }
+
+                        SettingsNavigation.STATS -> StatsSettingsScreen(
+                            useBlackStatusBarStateFlow,
+                            focusSettings.stats,
+                        ) { settingsNavigator.navigateTo(SettingsNavigation.ROOT) }
+
+                        SettingsNavigation.READ_LATER -> ReadLaterSettingsScreen(
+                            useBlackStatusBarStateFlow,
+                            focusSettings.readLater,
+                        ) { settingsNavigator.navigateTo(SettingsNavigation.ROOT) }
+
+                        SettingsNavigation.PASSWORDS -> PasswordsScreen(
+                            useBlackStatusBarStateFlow,
+                        ) { settingsNavigator.navigateTo(SettingsNavigation.ROOT) }
+
                         SettingsNavigation.LICENSES -> LicensesScreen(
                             useBlackStatusBarStateFlow,
                             viewModel(
