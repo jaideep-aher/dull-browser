@@ -17,9 +17,9 @@ The blocklist is bundled with the app. Changing it requires editing the source c
 | Platform | Source | Requirements |
 | --- | --- | --- |
 | Android | [Android app](app) on `main` | Android 9 or newer |
-| iOS | [iOS app](https://github.com/jaideep-aher/dull-browser/tree/ios/ios) on the `ios` branch | iOS 17 or newer |
+| iOS | [iOS app](ios) on `main` | iOS 17 or newer |
 
-Both versions use the same bundled site list. The iOS source currently lives on its own branch.
+Both versions use the same bundled site list. See the [feature roadmap](docs/FEATURE_ROADMAP.md) for what is planned next on both platforms.
 
 ## What is it for?
 
@@ -100,12 +100,12 @@ For the Lite build, use `assembleSlateLiteDebug` or `installSlateLiteDebug`. The
 On a Mac with Xcode and an iOS 17 or newer simulator:
 
 ```bash
-git clone --branch ios https://github.com/jaideep-aher/dull-browser.git dull-browser-ios
-cd dull-browser-ios
+git clone https://github.com/jaideep-aher/dull-browser.git
+cd dull-browser
 open ios/DullBrowser.xcodeproj
 ```
 
-Choose the `DullBrowser` scheme and an iPhone simulator, then run. For command-line builds and tests, see the [iOS README](https://github.com/jaideep-aher/dull-browser/blob/ios/ios/README.md).
+Choose the `DullBrowser` scheme and an iPhone simulator, then run. For command-line builds and tests, see the [iOS README](ios/README.md).
 
 On iOS, search also uses Google by default, and Settings lets you switch to DuckDuckGo or Bing. Appearance is Light (default), Dark, or System, and Privacy settings can clear browsing data. None of these change the site-blocking rules.
 
@@ -142,7 +142,7 @@ Run unit tests, including domain matching and redirect extraction:
 
 </details>
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes. Keep the core idea intact: no switch, allowlist, or “open anyway” for blocked sites.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes; it also describes the branching and release model. Keep the core idea intact: no switch, allowlist, or “open anyway” for blocked sites.
 
 ## License
 
