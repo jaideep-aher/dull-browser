@@ -159,11 +159,10 @@
         var d = new Date();
         var h = d.getHours();
         var m = pad(d.getMinutes());
-        var s = pad(d.getSeconds());
         if (clockMode === "24") {
-            clock.textContent = pad(h) + ":" + m + ":" + s;
+            clock.textContent = pad(h) + ":" + m;
         } else {
-            clock.textContent = ((h % 12) || 12) + ":" + m + ":" + s;
+            clock.textContent = ((h % 12) || 12) + ":" + m + (h < 12 ? " AM" : " PM");
         }
     }
 
@@ -171,7 +170,7 @@
         clock.hidden = true;
     } else {
         tick();
-        setInterval(tick, 1000);
+        setInterval(tick, 15000);
     }
 </script>
 <script>

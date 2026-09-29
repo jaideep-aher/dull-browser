@@ -355,7 +355,7 @@
     <!-- New tab -->
     <string name="new_tab_clock">Clock on new tab</string>
     <string name="new_tab_clock_off">Off</string>
-    <string name="new_tab_clock_12">12-hour</string>
+    <string name="new_tab_clock_12">12-hour AM/PM</string>
     <string name="new_tab_clock_24">24-hour</string>
 
     <!-- Site blocking -->
