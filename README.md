@@ -107,6 +107,8 @@ open ios/DullBrowser.xcodeproj
 
 Choose the `DullBrowser` scheme and an iPhone simulator, then run. For command-line builds and tests, see the [iOS README](https://github.com/jaideep-aher/dull-browser/blob/ios/ios/README.md).
 
+On iOS, search also uses Google by default, and Settings lets you switch to DuckDuckGo or Bing. Appearance is Light (default), Dark, or System, and Privacy settings can clear browsing data. None of these change the site-blocking rules.
+
 </details>
 
 ## How blocking works

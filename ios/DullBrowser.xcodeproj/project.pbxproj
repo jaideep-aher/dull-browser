@@ -1,0 +1,451 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D00000000000000000000031 /* blocklist.txt in Resources */ = {isa = PBXBuildFile; fileRef = D00000000000000000000030 /* blocklist.txt */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D00000000000000000000070 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D00000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D00000000000000000000040;
+			remoteInfo = DullBrowser;
+		};
+		D00000000000000000000072 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D00000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D00000000000000000000040;
+			remoteInfo = DullBrowser;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		D00000000000000000000010 /* DullBrowser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DullBrowser.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D00000000000000000000011 /* DullBrowserTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DullBrowserTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D00000000000000000000012 /* DullBrowserUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DullBrowserUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D00000000000000000000030 /* blocklist.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = blocklist.txt; path = ../app/src/main/assets/blocklist.txt; sourceTree = SOURCE_ROOT; };
+		D00000000000000000000032 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Config/Info.plist; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D00000000000000000000020 /* DullBrowser */ = {isa = PBXFileSystemSynchronizedRootGroup; path = DullBrowser; sourceTree = "<group>"; };
+		D00000000000000000000021 /* DullBrowserTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = DullBrowserTests; sourceTree = "<group>"; };
+		D00000000000000000000022 /* DullBrowserUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = DullBrowserUITests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D00000000000000000000042 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D00000000000000000000052 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D00000000000000000000062 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D00000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000020 /* DullBrowser */,
+				D00000000000000000000021 /* DullBrowserTests */,
+				D00000000000000000000022 /* DullBrowserUITests */,
+				D00000000000000000000030 /* blocklist.txt */,
+				D00000000000000000000032 /* Info.plist */,
+				D00000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D00000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000010 /* DullBrowser.app */,
+				D00000000000000000000011 /* DullBrowserTests.xctest */,
+				D00000000000000000000012 /* DullBrowserUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D00000000000000000000040 /* DullBrowser */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D00000000000000000000081 /* Build configuration list for PBXNativeTarget "DullBrowser" */;
+			buildPhases = (
+				D00000000000000000000041 /* Sources */,
+				D00000000000000000000042 /* Frameworks */,
+				D00000000000000000000043 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D00000000000000000000020 /* DullBrowser */,
+			);
+			name = DullBrowser;
+			productName = DullBrowser;
+			productReference = D00000000000000000000010 /* DullBrowser.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D00000000000000000000050 /* DullBrowserTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D00000000000000000000082 /* Build configuration list for PBXNativeTarget "DullBrowserTests" */;
+			buildPhases = (
+				D00000000000000000000051 /* Sources */,
+				D00000000000000000000052 /* Frameworks */,
+				D00000000000000000000053 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D00000000000000000000071 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D00000000000000000000021 /* DullBrowserTests */,
+			);
+			name = DullBrowserTests;
+			productName = DullBrowserTests;
+			productReference = D00000000000000000000011 /* DullBrowserTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D00000000000000000000060 /* DullBrowserUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D00000000000000000000083 /* Build configuration list for PBXNativeTarget "DullBrowserUITests" */;
+			buildPhases = (
+				D00000000000000000000061 /* Sources */,
+				D00000000000000000000062 /* Frameworks */,
+				D00000000000000000000063 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D00000000000000000000073 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D00000000000000000000022 /* DullBrowserUITests */,
+			);
+			name = DullBrowserUITests;
+			productName = DullBrowserUITests;
+			productReference = D00000000000000000000012 /* DullBrowserUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D00000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					D00000000000000000000040 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					D00000000000000000000050 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = D00000000000000000000040;
+					};
+					D00000000000000000000060 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = D00000000000000000000040;
+					};
+				};
+			};
+			buildConfigurationList = D00000000000000000000080 /* Build configuration list for PBXProject "DullBrowser" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D00000000000000000000002;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D00000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D00000000000000000000040 /* DullBrowser */,
+				D00000000000000000000050 /* DullBrowserTests */,
+				D00000000000000000000060 /* DullBrowserUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D00000000000000000000043 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D00000000000000000000031 /* blocklist.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D00000000000000000000053 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D00000000000000000000063 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D00000000000000000000041 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D00000000000000000000051 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D00000000000000000000061 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D00000000000000000000071 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D00000000000000000000040 /* DullBrowser */;
+			targetProxy = D00000000000000000000070 /* PBXContainerItemProxy */;
+		};
+		D00000000000000000000073 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D00000000000000000000040 /* DullBrowser */;
+			targetProxy = D00000000000000000000072 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		D00000000000000000000090 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D00000000000000000000091 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D00000000000000000000092 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dull Browser";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.slate.browser.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D00000000000000000000093 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dull Browser";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.slate.browser.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D00000000000000000000094 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.slate.browser.ios.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DullBrowser.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DullBrowser";
+			};
+			name = Debug;
+		};
+		D00000000000000000000095 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.slate.browser.ios.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DullBrowser.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DullBrowser";
+			};
+			name = Release;
+		};
+		D00000000000000000000096 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.slate.browser.ios.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DullBrowser;
+			};
+			name = Debug;
+		};
+		D00000000000000000000097 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.slate.browser.ios.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DullBrowser;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D00000000000000000000080 /* Build configuration list for PBXProject "DullBrowser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D00000000000000000000090 /* Debug */,
+				D00000000000000000000091 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D00000000000000000000081 /* Build configuration list for PBXNativeTarget "DullBrowser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D00000000000000000000092 /* Debug */,
+				D00000000000000000000093 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D00000000000000000000082 /* Build configuration list for PBXNativeTarget "DullBrowserTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D00000000000000000000094 /* Debug */,
+				D00000000000000000000095 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D00000000000000000000083 /* Build configuration list for PBXNativeTarget "DullBrowserUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D00000000000000000000096 /* Debug */,
+				D00000000000000000000097 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D00000000000000000000001 /* Project object */;
+}
