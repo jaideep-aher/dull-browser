@@ -12,7 +12,6 @@ import com.github.jaideepaher.slatebrowser.html.jsoup.body
 import com.github.jaideepaher.slatebrowser.html.jsoup.charset
 import com.github.jaideepaher.slatebrowser.html.jsoup.parse
 import com.github.jaideepaher.slatebrowser.html.jsoup.style
-import com.github.jaideepaher.slatebrowser.html.jsoup.tag
 import com.github.jaideepaher.slatebrowser.html.jsoup.title
 import com.github.jaideepaher.slatebrowser.focus.Bookmarks
 import com.github.jaideepaher.slatebrowser.focus.Countdowns
@@ -81,16 +80,15 @@ class HomePageFactory @Inject constructor(
             }
             charset { UTF8 }
             body {
-                tag("script") {
-                    html(
-                        html()
-                            .replace($$"${BASE_URL}", queryUrl)
+                getElementsByTag("script").forEach { script ->
+                    script.html(
+                        script.html()
+                            .replace($$"${BASE_URL}", queryUrl.replace("&", "\\u0026"))
                             .replace($$"${CLOCK}", clock)
                             .replace($$"${SEARCH_HINT}", searchHint.replace("\"", "\\\""))
                             .replace($$"${COUNTDOWN}", countdownLabel().replace("\"", "\\\""))
                             .replace($$"${MILESTONE}", milestoneLabel())
-                            .replace($$"${QUICK_LINKS}", quickLinksJson())
-                            .replace("&", "\\u0026")
+                            .replace($$"${QUICK_LINKS}", quickLinksJson().replace("\\", "\\\\").replace("\"", "\\\""))
                     )
                 }
             }

@@ -34,6 +34,7 @@
             font-weight: 300;
             letter-spacing: -0.02em;
             margin: 0 0 32px;
+            font-variant-numeric: tabular-nums;
         }
 
         #clock[hidden] {
@@ -149,21 +150,32 @@
 <script>
     var clockMode = "${CLOCK}";
     var clock = document.getElementById("clock");
-    document.getElementById("search_input").placeholder = "${SEARCH_HINT}";
+
+    function pad(n) {
+        return ("0" + n).slice(-2);
+    }
 
     function tick() {
         var d = new Date();
         var h = d.getHours();
-        var m = ("0" + d.getMinutes()).slice(-2);
-        clock.textContent = (clockMode === "24" ? ("0" + h).slice(-2) : ((h % 12) || 12)) + ":" + m;
+        var m = pad(d.getMinutes());
+        var s = pad(d.getSeconds());
+        if (clockMode === "24") {
+            clock.textContent = pad(h) + ":" + m + ":" + s;
+        } else {
+            clock.textContent = ((h % 12) || 12) + ":" + m + ":" + s;
+        }
     }
 
     if (clockMode === "off") {
         clock.hidden = true;
     } else {
         tick();
-        setInterval(tick, 10000);
+        setInterval(tick, 1000);
     }
+</script>
+<script>
+    document.getElementById("search_input").placeholder = "${SEARCH_HINT}";
 
     function search() {
         var value = document.getElementById("search_input").value;
@@ -187,8 +199,8 @@
         notice.hidden = false;
     }
 
-    var links = ${QUICK_LINKS};
-    if (links && links.length) {
+    var links = JSON.parse("${QUICK_LINKS}");
+    if (links.length) {
         var box = document.getElementById("links");
         box.hidden = false;
         links.forEach(function (link, index) {
