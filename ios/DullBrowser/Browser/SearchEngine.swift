@@ -29,6 +29,7 @@ enum BrowserPreferences {
     static let javaScriptKey = "javaScriptEnabled"
     static let newWindowTabsKey = "newWindowLinksOpenTabs"
     static let startFreshKey = "startFreshOnLaunch"
+    static let blockedNoteKey = "blockedPageNote"
 
     static func flag(_ key: String, default value: Bool, in defaults: UserDefaults = defaults) -> Bool {
         defaults.object(forKey: key) == nil ? value : defaults.bool(forKey: key)

@@ -2,7 +2,9 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var session: BrowserSession
+    var open: (URL) -> Void = { _ in }
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(BrowserPreferences.blockedNoteKey, store: BrowserPreferences.defaults) private var blockedNote = ""
     @AppStorage(SearchEngine.preferenceKey, store: BrowserPreferences.defaults) private var engine = SearchEngine.google.rawValue
     @AppStorage(Appearance.preferenceKey, store: BrowserPreferences.defaults) private var appearance = Appearance.light.rawValue
     @AppStorage(BrowserPreferences.showClockKey, store: BrowserPreferences.defaults) private var showClock = true
@@ -11,6 +13,7 @@ struct SettingsView: View {
     @AppStorage(BrowserPreferences.javaScriptKey, store: BrowserPreferences.defaults) private var javaScript = true
     @AppStorage(BrowserPreferences.newWindowTabsKey, store: BrowserPreferences.defaults) private var newWindowTabs = true
     @AppStorage(BrowserPreferences.startFreshKey, store: BrowserPreferences.defaults) private var startFresh = false
+    @State private var addedCount = SiteBlocker.shared.addedDomains.count
     @State private var confirmingClear = false
     @State private var cleared = false
 
@@ -111,6 +114,62 @@ struct SettingsView: View {
                         .accessibilityIdentifier("blockedSiteCount")
                     Text("YouTube, social media, porn, and other listed sites stay blocked. There is no setting to allow them, with any search engine or setting here.")
                         .foregroundStyle(Theme.muted)
+                    if Feature.customBlocklist.isUnlocked {
+                        NavigationLink {
+                            AddedSitesView()
+                        } label: {
+                            LabeledContent("Sites you added", value: addedCount.formatted())
+                        }
+                        .accessibilityIdentifier("addedSitesLink")
+                        .onReceive(NotificationCenter.default.publisher(for: .blocklistGrew).receive(on: RunLoop.main)) { _ in
+                            addedCount = SiteBlocker.shared.addedDomains.count
+                        }
+                    }
+                    if Feature.blockedPageNote.isUnlocked {
+                        TextField("A note to yourself on the blocked page", text: $blockedNote, axis: .vertical)
+                            .lineLimit(1...4)
+                            .accessibilityIdentifier("blockedNoteField")
+                    }
+                }
+
+                Section {
+                    if Feature.mindfulPause.isUnlocked {
+                        NavigationLink("Pause before sites") { PauseSettingsView() }
+                            .accessibilityIdentifier("pauseSitesLink")
+                    }
+                    if Feature.countdowns.isUnlocked {
+                        NavigationLink("Countdowns") { CountdownsView() }
+                            .accessibilityIdentifier("countdownsLink")
+                    }
+                } header: {
+                    Text("Focus")
+                } footer: {
+                    Text("A pause asks before shopping, sports and gossip sites open. Countdowns show on the start page.")
+                }
+
+                Section("Library") {
+                    if Feature.bookmarks.isUnlocked {
+                        NavigationLink("Bookmarks") { BookmarksView(open: open) }
+                            .accessibilityIdentifier("bookmarksLink")
+                    }
+                    if Feature.readLater.isUnlocked {
+                        NavigationLink("Read later") { ReadLaterView(open: open) }
+                            .accessibilityIdentifier("readLaterLink")
+                    }
+                    if Feature.stats.isUnlocked {
+                        NavigationLink("Stats") { StatsView() }
+                            .accessibilityIdentifier("statsLink")
+                    }
+                }
+
+                Section {
+                    Label("Handled by iOS", systemImage: "key")
+                    Text("Saved passwords and passkeys stay in the iOS Passwords app or your password manager. Tap the key above the keyboard on a sign-in form to fill them. Dull never sees or stores them.")
+                        .foregroundStyle(Theme.muted)
+                    Button("Open AutoFill settings") { PasswordSettings.open() }
+                        .accessibilityIdentifier("passwordSettings")
+                } header: {
+                    Text("Passwords")
                 }
 
                 Section("About") {

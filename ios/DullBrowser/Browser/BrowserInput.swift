@@ -5,14 +5,19 @@ enum BrowserInput {
     static func url(for input: String, searchEngine: SearchEngine = .current) -> URL? {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
-        let lower = text.lowercased()
+        return webAddress(text) ?? search(text, engine: searchEngine)
+    }
 
+    /// The typed text as a web address, or nil if it would be a search.
+    static func webAddress(_ input: String) -> URL? {
+        let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = text.lowercased()
         if lower.hasPrefix("http://") || lower.hasPrefix("https://") {
             if let url = URL(string: text), url.host?.isEmpty == false { return url }
-        } else if !text.contains(" "), looksLikeHost(text), let url = URL(string: "https://" + text), url.host != nil {
+        } else if !text.isEmpty, !text.contains(" "), looksLikeHost(text), let url = URL(string: "https://" + text), url.host != nil {
             return url
         }
-        return search(text, engine: searchEngine)
+        return nil
     }
 
     static func search(_ query: String, engine: SearchEngine = .current) -> URL? {

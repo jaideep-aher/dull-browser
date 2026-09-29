@@ -106,6 +106,28 @@ Fifty cases added on top of the original 66 automated tests: 42 automated (34 un
 7. **N49 — System appearance live.** Set Appearance to **System**, then toggle Dark Mode in Control Center while Dull is open. The start page, toolbar, and Settings switch immediately. **Light** and **Dark** ignore the system toggle.
 8. **N50 — Large text and VoiceOver.** At the largest Dynamic Type size, Settings rows wrap without clipping. With VoiceOver, every Settings control has a spoken label, and the blocked page reads its message and host.
 
+## Focus and library features
+
+Unit tests are in `DullBrowserTests/FocusFeatureTests.swift`; UI tests are in `DullBrowserUITests/FeatureWorkflowTests.swift` and use the local `FixtureServer`, with `-UITestPauseSites 127.0.0.1 -UITestPauseSeconds 2` where a fixture page must be paused.
+
+| Area | Checks | Test suite |
+| --- | --- | --- |
+| Added sites | Typed sites reduce to a domain; IPs, single words and invalid labels are refused; added sites block subdomains and hidden links, persist, only grow, and ignore tampered entries; duplicates of listed sites are refused; there is no remove control | SiteAddressTests, CustomBlocklistTests, FeatureWorkflowTests |
+| Pause | Off until turned on; subdomains match; work tools on shop domains are exempt; blocked sites cannot be paused and the block list wins; delay 10/20/30 s by opens that day; Continue only after the countdown; 5-minute grace in that tab only; removal waits 24 h, survives relaunch, can be cancelled, and ends the streak when applied; default sites are valid and not already blocked | PauseListTests, PauseNavigationTests, FeatureWorkflowTests |
+| Blocked page | Attempts counted per site per day, not on restore; note and actions shown; still no links, web content or reload | PauseNavigationTests, FeatureWorkflowTests |
+| Stats | Per-day aggregation and persistence; streak across gaps, loosened days and month ends; 7 and 30 day milestones once, with a one-time notice; 400-day cap; weekly totals and time saved; share line has totals only; card renders light and dark | StatsTests, FeatureWorkflowTests |
+| Countdowns | Nearest upcoming date, today and tomorrow wording, past dates hidden, persistence | CountdownTests, FeatureWorkflowTests |
+| Read later | Reading time open and closed, across midnight, time until open; save, mark read, remove, persistence; opening from the list | ReadingWindowTests, ReadLaterTests, FeatureWorkflowTests |
+| Bookmarks | Add, toggle, edit, remove, persistence, http and https only, blocked sites still closed, start-page count capped at 8; page menu and start-page link | BookmarkTests, FeatureWorkflowTests |
+| Tab grid | Only real pages are captured; preview is at most 320 px wide and under 80 KB, starting a capture costs under one frame; previews are removed from disk; grid shows the preview and a plain card for the blocked tab; form state survives switching | FeatureGateAndPreviewTests, FeatureWorkflowTests |
+| Feature gate | Everything unlocked by default; locking every feature leaves blocking unchanged | FeatureGateAndPreviewTests |
+
+### Manual checks for passwords and passkeys
+
+1. On a physical iPhone with a saved password for a site, open its sign-in page in Dull, tap the username field, and use the key in the QuickType bar. The Passwords app (or the chosen password manager) fills the form.
+2. Settings › Passwords › Open AutoFill settings opens the system AutoFill settings.
+3. On a site that offers passkeys, a passkey prompt is not expected to work without the `com.apple.developer.web-browser.public-key-credential` entitlement; the site should still offer a password or another sign-in method.
+
 ## Other manual device checks
 
 - Open several useful sites, type into a form, switch tabs, and return. The page and form should remain intact while the app stays open.

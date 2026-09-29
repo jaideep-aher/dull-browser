@@ -23,23 +23,39 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
     @Published private(set) var progress = 0.0
     @Published private(set) var canGoBack = false
     @Published private(set) var canGoForward = false
+    /// A mindful pause in front of a site on the pause list. Nothing from it has loaded.
+    @Published private(set) var pause: PauseRequest?
 
     private var blocker: SiteBlocker { .shared }
+    private let pauseList: PauseList
+    private let stats: Stats
     private var ruleLists: [WKContentRuleList] = []
+    private var addedRuleList: WKContentRuleList?
     private var observers: Set<AnyCancellable> = []
+    private var listObserver: AnyCancellable?
+    /// Sites this tab may open without a pause until the given time, after Continue.
+    private var pauseGrace: [String: Date] = [:]
+    /// A restored tab reopening a closed page is not a new attempt.
+    private var loadIsRestore = false
     /// Bumps on each navigation so a late DNS answer for an old one is dropped.
     private var generation = 0
 
-    init(id: UUID = UUID(), restoredURL: URL? = nil) {
+    init(id: UUID = UUID(), restoredURL: URL? = nil, pauseList: PauseList = .shared, stats: Stats = .shared) {
         self.id = id
         self.restoredURL = restoredURL
+        self.pauseList = pauseList
+        self.stats = stats
         webView = Self.makeWebView(ruleLists: [])
         super.init()
         attach(webView)
+        listObserver = NotificationCenter.default.publisher(for: .blocklistGrew)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.blocklistGrew() }
         Task {
             let lists = await SubresourceRules.load()
             ruleLists = lists
             lists.forEach(webView.configuration.userContentController.add)
+            await refreshAddedRules()
         }
     }
 
@@ -47,20 +63,37 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
         if let restoredURL { return restoredURL.absoluteString }
         if showingNewTab { return nil }
         if let blockedHost { return "https://\(blockedHost)" }
+        if pause != nil { return committedURL?.absoluteString }
         return (loadError != nil ? requestedURL : (url ?? requestedURL))?.absoluteString
     }
 
     var tabTitle: String {
         if let blockedHost { return blockedHost }
+        if let pause { return pause.url.host ?? pause.site }
         if let restoredURL { return restoredURL.host ?? "Page" }
         if showingNewTab { return "New tab" }
         return title.isEmpty ? (url?.host ?? "Loading…") : title
     }
 
+    /// The list entry behind the closed page, such as "youtube.com" for "m.youtube.com".
+    var blockedSite: String? {
+        blockedHost.map { blocker.listedDomain(host: $0) ?? $0 }
+    }
+
+    /// The page on screen, if it is an ordinary web page that can be bookmarked or saved.
+    var pageURL: URL? {
+        guard !showingNewTab, blockedHost == nil, pause == nil, loadError == nil,
+              let url, let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else { return nil }
+        return url
+    }
+
+    var hasCapturablePage: Bool { pageURL != nil && restoredURL == nil && webView.url != nil }
+
     func restoreIfNeeded() {
         guard let target = restoredURL else { return }
         restoredURL = nil
         load(target)
+        loadIsRestore = true
     }
 
     func deactivate() {
@@ -78,6 +111,7 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
 
     var addressForDisplay: String {
         if let blockedHost { return blockedHost }
+        if let pause { return pause.url.host ?? "" }
         return url?.host ?? url?.absoluteString ?? ""
     }
 
@@ -86,7 +120,7 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
         return url?.absoluteString ?? ""
     }
 
-    var canStepBack: Bool { canGoBack || blockedHost != nil || loadError != nil || !showingNewTab }
+    var canStepBack: Bool { canGoBack || blockedHost != nil || loadError != nil || pause != nil || !showingNewTab }
 
     func open(_ input: String) {
         guard let url = BrowserInput.url(for: input) else { return }
@@ -105,18 +139,37 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
     func load(_ url: URL) {
         generation += 1
         restoredURL = nil
+        loadIsRestore = false
         requestedURL = url
         self.url = url
         blockedHost = nil
         loadError = nil
+        pause = nil
         showingNewTab = false
         webView.load(URLRequest(url: url))
     }
 
+    /// "Go back" on the pause. Counted as a win.
+    func leavePause() {
+        guard pause != nil else { return }
+        stats.recordPause(wentBack: true)
+        goBack()
+    }
+
+    /// Only works once the countdown has finished. The site then opens in this tab
+    /// without another pause for a few minutes.
+    func continuePause(at date: Date = Date()) {
+        guard let request = pause, request.isReady(at: date) else { return }
+        stats.recordPause(wentBack: false)
+        pauseGrace[request.site] = date + PauseRules.grace
+        load(request.url)
+    }
+
     func goBack() {
-        if blockedHost != nil || loadError != nil {
+        if blockedHost != nil || loadError != nil || pause != nil {
             blockedHost = nil
             loadError = nil
+            pause = nil
             if committedURL == nil {
                 newTab()
             } else {
@@ -133,6 +186,7 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
     func goForward() {
         blockedHost = nil
         loadError = nil
+        pause = nil
         webView.goForward()
     }
 
@@ -146,7 +200,7 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
 
     /// Every reload goes back through the navigation delegate, so a listed page stays closed.
     func reload() {
-        guard blockedHost == nil, !showingNewTab || restoredURL != nil else { return }
+        guard blockedHost == nil, pause == nil, !showingNewTab || restoredURL != nil else { return }
         if restoredURL != nil {
             restoreIfNeeded()
         } else if loadError != nil || webView.backForwardList.currentItem == nil, let target = requestedURL ?? url {
@@ -174,11 +228,33 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
         webView.navigationDelegate = nil
         webView.uiDelegate = nil
         observers.removeAll()
-        webView = Self.makeWebView(ruleLists: ruleLists)
+        webView = Self.makeWebView(ruleLists: ruleLists + [addedRuleList].compactMap { $0 })
         attach(webView)
         blockedHost = nil
         loadError = nil
+        pause = nil
         showingNewTab = true
+    }
+
+    /// A site the person just added closes in this tab at once, like a listed one.
+    private func blocklistGrew() {
+        Task { await refreshAddedRules() }
+        guard blockedHost == nil, !showingNewTab else { return }
+        if let pause, let host = blocker.listedHost(for: pause.url) {
+            self.pause = nil
+            showBlocked(host, in: webView, stage: "added to list")
+        } else if let current = webView.url ?? url, let host = blocker.listedHost(for: current) {
+            showBlocked(host, in: webView, stage: "added to list", committed: webView.url != nil)
+        }
+    }
+
+    private func refreshAddedRules() async {
+        let list = await SubresourceRules.loadAdded()
+        guard list !== addedRuleList else { return }
+        let controller = webView.configuration.userContentController
+        if let addedRuleList { controller.remove(addedRuleList) }
+        if let list { controller.add(list) }
+        addedRuleList = list
     }
 
     private static func makeWebView(ruleLists: [WKContentRuleList]) -> WKWebView {
@@ -219,8 +295,14 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
         guard view === webView else { return }
         Logger.blocking.info("Closed \(host, privacy: .public) at \(stage, privacy: .public)")
         view.pauseAllMediaPlayback(completionHandler: nil)
-        blockedHost = host.lowercased()
+        let lower = host.lowercased()
+        if blockedHost != lower, !loadIsRestore {
+            stats.recordBlocked(site: blocker.listedDomain(host: lower) ?? lower)
+        }
+        loadIsRestore = false
+        blockedHost = lower
         loadError = nil
+        pause = nil
         showingNewTab = false
         guard committed else { return }
         // Only reached if a page on a listed host got past every earlier check.
@@ -231,6 +313,33 @@ final class BrowserModel: NSObject, ObservableObject, Identifiable {
             view.loadHTMLString("", baseURL: nil)
         }
     }
+
+    /// Returns true when the navigation should wait behind a pause instead of loading.
+    private func pauseIfNeeded(_ url: URL, in view: WKWebView, at date: Date = Date()) -> Bool {
+        guard let site = pauseList.site(for: url.host) else { return false }
+        if let until = pauseGrace[site], until > date { return false }
+        pauseGrace[site] = nil
+        view.pauseAllMediaPlayback(completionHandler: nil)
+        let earlier = stats.pausesToday(site: site)
+        stats.recordPauseShown(site: site)
+        loadIsRestore = false
+        pause = PauseRequest(url: url, site: site,
+                             delay: PauseRules.delay(pausesEarlierToday: earlier, base: PauseRules.configuredBaseDelay),
+                             shownAt: date)
+        loadError = nil
+        showingNewTab = false
+        return true
+    }
+}
+
+struct PauseRequest: Equatable {
+    let url: URL
+    let site: String
+    let delay: TimeInterval
+    let shownAt: Date
+
+    func remaining(at date: Date) -> TimeInterval { max(0, delay - date.timeIntervalSince(shownAt)) }
+    func isReady(at date: Date) -> Bool { remaining(at: date) <= 0 }
 }
 
 extension BrowserModel: WKNavigationDelegate {
@@ -258,6 +367,8 @@ extension BrowserModel: WKNavigationDelegate {
 
         switch url.scheme?.lowercased() ?? "" {
         case "http", "https":
+            // The block list is checked first, so a listed site is closed, never paused.
+            if isMainFrame, pauseIfNeeded(url, in: webView) { return .cancel }
             if isMainFrame { requestedURL = url }
             if isMainFrame, let host = url.host {
                 // Start the lookup while the request goes out; the response waits on it.
@@ -333,6 +444,7 @@ extension BrowserModel: WKNavigationDelegate {
             committedURL = url
             requestedURL = url
             loadError = nil
+            loadIsRestore = false
         }
     }
 
@@ -372,6 +484,34 @@ extension BrowserModel: WKUIDelegate {
             openNewWindowLink(target)
         }
         return nil
+    }
+
+    /// Adds Save for later and Bookmark to the link menu. The live link preview is left out:
+    /// it would render the target outside this tab's navigation checks.
+    func webView(
+        _ webView: WKWebView,
+        contextMenuConfigurationForElement elementInfo: WKContextMenuElementInfo,
+        completionHandler: @escaping (UIContextMenuConfiguration?) -> Void
+    ) {
+        guard let link = elementInfo.linkURL, let scheme = link.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
+            completionHandler(UIContextMenuConfiguration(identifier: nil, previewProvider: nil, actionProvider: nil))
+            return
+        }
+        let title = link.host.map { $0 + (link.path.count > 1 ? link.path : "") } ?? link.absoluteString
+        completionHandler(UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggested in
+            var ours: [UIMenuElement] = []
+            if Feature.readLater.isUnlocked {
+                ours.append(UIAction(title: "Save for later", image: UIImage(systemName: "clock")) { _ in
+                    ReadLater.shared.add(link, title: title)
+                })
+            }
+            if Feature.bookmarks.isUnlocked, !Bookmarks.shared.contains(link) {
+                ours.append(UIAction(title: "Add bookmark", image: UIImage(systemName: "star")) { _ in
+                    Bookmarks.shared.add(link, title: title)
+                })
+            }
+            return UIMenu(children: [UIMenu(options: .displayInline, children: ours)] + suggested)
+        })
     }
 
     func openNewWindowLink(_ target: URL, defaults: UserDefaults = BrowserPreferences.defaults) {

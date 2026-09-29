@@ -6,7 +6,10 @@ struct BrowserBar: View {
     let tabCount: Int
     let showTabs: () -> Void
     let showSettings: () -> Void
+    var showPanel: (Panel) -> Void = { _ in }
 
+    @ObservedObject private var bookmarks = Bookmarks.shared
+    @ObservedObject private var readLater = ReadLater.shared
     @State private var text = ""
     @FocusState private var editing: Bool
 
@@ -38,10 +41,14 @@ struct BrowserBar: View {
                         }
                         .font(.system(size: 15))
                         .foregroundStyle(Theme.ink)
-                        .padding(.horizontal, 12)
+                        .padding(.leading, 12)
+                        .padding(.trailing, editing ? 12 : 34)
                         .frame(height: 38)
                         .background(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink.opacity(0.25), lineWidth: 1))
                         .accessibilityIdentifier("addressField")
+                        .overlay(alignment: .trailing) {
+                            if !editing { pageMenu }
+                        }
 
                     barButton(model.isLoading ? "xmark" : "arrow.clockwise",
                               label: model.isLoading ? "Stop" : "Reload",
@@ -82,6 +89,53 @@ struct BrowserBar: View {
                 }
             }
         }
+    }
+
+    private var pageMenu: some View {
+        Menu {
+            if let page = model.pageURL {
+                if Feature.bookmarks.isUnlocked {
+                    let saved = bookmarks.contains(page)
+                    Button {
+                        bookmarks.toggle(page, title: model.title)
+                    } label: {
+                        Label(saved ? "Remove bookmark" : "Add bookmark", systemImage: saved ? "star.fill" : "star")
+                    }
+                    .accessibilityIdentifier("menuBookmark")
+                }
+                if Feature.readLater.isUnlocked {
+                    Button {
+                        readLater.add(page, title: model.title)
+                    } label: {
+                        Label(readLater.contains(page) ? "Saved for later" : "Save for later", systemImage: "clock")
+                    }
+                    .disabled(readLater.contains(page))
+                    .accessibilityIdentifier("menuSaveForLater")
+                }
+                ShareLink(item: page) { Label("Share", systemImage: "square.and.arrow.up") }
+                Divider()
+            }
+            if Feature.bookmarks.isUnlocked {
+                Button { showPanel(.bookmarks) } label: { Label("Bookmarks", systemImage: "book") }
+                    .accessibilityIdentifier("menuBookmarks")
+            }
+            if Feature.readLater.isUnlocked {
+                Button { showPanel(.readLater) } label: { Label("Read later", systemImage: "tray") }
+                    .accessibilityIdentifier("menuReadLater")
+            }
+            if Feature.stats.isUnlocked {
+                Button { showPanel(.stats) } label: { Label("Stats", systemImage: "chart.bar") }
+                    .accessibilityIdentifier("menuStats")
+            }
+        } label: {
+            Image(systemName: bookmarks.contains(model.pageURL) ? "star.fill" : "ellipsis")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Theme.muted)
+                .frame(width: 34, height: 38)
+                .contentShape(Rectangle())
+        }
+        .accessibilityLabel("Page menu")
+        .accessibilityIdentifier("pageMenu")
     }
 
     private func barButton(_ symbol: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {

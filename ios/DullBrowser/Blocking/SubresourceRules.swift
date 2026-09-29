@@ -56,6 +56,27 @@ enum SubresourceRules {
         return lists
     }
 
+    private static var addedList: (domains: Set<String>, list: WKContentRuleList)?
+
+    /// The sites the person added, compiled into one small list that is replaced when it grows.
+    static func loadAdded() async -> WKContentRuleList? {
+        let domains = SiteBlocker.shared.addedDomains
+        guard !domains.isEmpty else { return nil }
+        if let addedList, addedList.domains == domains { return addedList.list }
+        let sorted = domains.sorted()
+        let identifier = "added-\(fingerprint(sorted))"
+        guard let store = WKContentRuleListStore.default() else { return nil }
+        let list: WKContentRuleList?
+        if let cached = try? await store.contentRuleList(forIdentifier: identifier) {
+            list = cached
+        } else {
+            list = try? await store.compileContentRuleList(forIdentifier: identifier,
+                                                           encodedContentRuleList: encode(sorted[...]))
+        }
+        if let list { addedList = (domains, list) }
+        return list
+    }
+
     nonisolated static func encode(_ domains: ArraySlice<String>) -> String {
         let types = resourceTypes.map { "\"\($0)\"" }.joined(separator: ",")
         var rules: [String] = []
