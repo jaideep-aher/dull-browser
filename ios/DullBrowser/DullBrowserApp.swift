@@ -8,6 +8,7 @@ struct DullBrowserApp: App {
         BrowserPreferences.resetForUITestingIfRequested()
         #endif
         BrowserPreferences.migrate()
+        FocusLifecycle.start()
         if BrowserPreferences.startsFresh {
             Task { @MainActor in
                 await WKWebsiteDataStore.default().removeData(
